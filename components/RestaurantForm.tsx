@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import { X } from 'lucide-react'
 import { Restaurant } from '@/types'
 
@@ -20,6 +21,9 @@ export function RestaurantForm({ onSubmit }: Props) {
   const [visitDate, setVisitDate] = useState('')
   const [rating, setRating] = useState<number | null>(null)
   const [review, setReview] = useState('')
+  const [proximity, setProximity] = useState<number | null>(null)
+  const [tags, setTags] = useState<string[]>([])
+  const [generatingTags, setGeneratingTags] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const addItem = () => {
@@ -38,6 +42,21 @@ export function RestaurantForm({ onSubmit }: Props) {
     if (e.key === 'Enter') { e.preventDefault(); addItem() }
   }
 
+  const handleGenerateTags = async () => {
+    if (!review.trim()) return
+    setGeneratingTags(true)
+    const res = await fetch('/api/restaurants/generate-tags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ review, name, items }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      setTags(data.tags ?? [])
+    }
+    setGeneratingTags(false)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
@@ -50,6 +69,8 @@ export function RestaurantForm({ onSubmit }: Props) {
       visit_date: visited && visitDate ? new Date(visitDate).toISOString() : null,
       rating: visited ? rating : null,
       review: review.trim() || null,
+      proximity,
+      tags,
     })
     setLoading(false)
   }
@@ -63,6 +84,19 @@ export function RestaurantForm({ onSubmit }: Props) {
       <div>
         <Label>捷運站</Label>
         <Input value={mrtStation} onChange={e => setMrtStation(e.target.value)} placeholder="例：大安、信義安和" />
+      </div>
+      <div>
+        <Label>距離評分（1=很遠，10=超近）</Label>
+        <div className="flex gap-2 mt-1 flex-wrap">
+          {[1,2,3,4,5,6,7,8,9,10].map(n => (
+            <button type="button" key={n} onClick={() => setProximity(n)}
+              className={`w-9 h-9 rounded-full border text-sm font-medium ${
+                proximity === n ? 'bg-primary text-primary-foreground' : 'border-border'
+              }`}>
+              {n}
+            </button>
+          ))}
+        </div>
       </div>
       <div>
         <Label>品項</Label>
@@ -105,7 +139,9 @@ export function RestaurantForm({ onSubmit }: Props) {
             <div className="flex gap-2 mt-1">
               {[1,2,3,4,5].map(n => (
                 <button type="button" key={n} onClick={() => setRating(n)}
-                  className={`w-10 h-10 rounded-full border text-sm font-medium ${rating === n ? 'bg-primary text-primary-foreground' : 'border-border'}`}>
+                  className={`w-10 h-10 rounded-full border text-sm font-medium ${
+                    rating === n ? 'bg-primary text-primary-foreground' : 'border-border'
+                  }`}>
                   {n}
                 </button>
               ))}
@@ -114,7 +150,29 @@ export function RestaurantForm({ onSubmit }: Props) {
           <div>
             <Label>短評</Label>
             <Textarea value={review} onChange={e => setReview(e.target.value)} placeholder="口感如何？推薦指數？" />
+            {review.trim() && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={handleGenerateTags}
+                disabled={generatingTags}
+              >
+                {generatingTags ? '生成標籤中...' : '自動生成標籤'}
+              </Button>
+            )}
           </div>
+          {tags.length > 0 && (
+            <div>
+              <Label>標籤</Label>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {tags.map(tag => (
+                  <Badge key={tag}>{tag}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
       <Button type="submit" disabled={loading} className="w-full">

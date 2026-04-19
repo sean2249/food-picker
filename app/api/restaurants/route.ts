@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
     visit_date: body.visit_date ?? null,
     rating: body.rating ?? null,
     review: body.review ?? null,
+    proximity: body.proximity ?? null,
+    tags: body.tags ?? [],
   }
 
   if (!insert.name) {

@@ -8,6 +8,8 @@ create table if not exists restaurants (
   visit_date timestamptz,
   rating smallint check (rating between 1 and 5),
   review text,
+  proximity smallint check (proximity between 1 and 10),
+  tags text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -49,3 +51,16 @@ select cron.schedule(
   '0 4 * * *',
   $$delete from telegram_sessions where updated_at < now() - interval '24 hours'$$
 );
+
+-- Recommendation feedback logs
+create table if not exists recommendation_logs (
+  id uuid primary key default gen_random_uuid(),
+  chosen_restaurant_id uuid references restaurants(id) on delete set null,
+  shown_restaurant_ids uuid[] not null default '{}',
+  created_at timestamptz not null default now()
+);
+
+alter table recommendation_logs enable row level security;
+drop policy if exists "Allow all" on recommendation_logs;
+create policy "Allow all" on recommendation_logs
+  for all to authenticated using (true) with check (true);
