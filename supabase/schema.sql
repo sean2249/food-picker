@@ -32,9 +32,13 @@ alter table restaurants enable row level security;
 alter table mood_logs enable row level security;
 alter table telegram_sessions enable row level security;
 
-create policy "Allow all" on restaurants for all using (true);
-create policy "Allow all" on mood_logs for all using (true);
-create policy "Allow all" on telegram_sessions for all using (true);
+drop policy if exists "Allow all" on restaurants;
+drop policy if exists "Allow all" on mood_logs;
+drop policy if exists "Allow all" on telegram_sessions;
+
+create policy "Allow all" on restaurants for all to authenticated using (true) with check (true);
+create policy "Allow all" on mood_logs for all to authenticated using (true) with check (true);
+create policy "Allow all" on telegram_sessions for all to authenticated using (true) with check (true);
 
 -- Auto-clean sessions inactive for more than 24 hours
 -- NOTE: pg_cron is only available on Supabase Pro plan.
