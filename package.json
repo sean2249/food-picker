@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "bot": "ts-node --esm -r tsconfig-paths/register scripts/run-telegram-bot.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
