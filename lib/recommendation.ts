@@ -44,8 +44,8 @@ export async function getRecommendation(
 
   const historySection = historyRows && historyRows.length > 0
     ? historyRows
-        .map((h: { mood: string; created_at: string; restaurants: { name: string; items: string[] } | null }) => {
-          const r = h.restaurants
+        .map((h: { mood: string; created_at: string; restaurants: { name: string; items: string[] }[] | null }) => {
+          const r = Array.isArray(h.restaurants) ? h.restaurants[0] : h.restaurants
           return `- 心情「${h.mood}」→ ${r ? `${r.name}（${r.items.join('、')}）` : '無推薦'} [${h.created_at.slice(0, 10)}]`
         })
         .join('\n')
@@ -70,7 +70,6 @@ ${restaurantList}
 <history>
 ${historySection}
 </history>`,
-        // @ts-expect-error: cache_control is supported at runtime but not yet in SDK types
         cache_control: { type: 'ephemeral' },
       },
     ],
