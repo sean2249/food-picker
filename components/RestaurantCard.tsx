@@ -1,8 +1,9 @@
 import { Restaurant } from '@/types'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Star, MapPin, Navigation } from 'lucide-react'
+import Link from 'next/link'
 
 interface Props {
   restaurant: Restaurant
@@ -16,8 +17,13 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Pro
     <Card className={`w-full ${isChosen ? 'ring-2 ring-primary' : ''}`}>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
-          <CardTitle className="text-lg">{restaurant.name}</CardTitle>
-          <div className="flex items-center gap-2">
+          <div>
+            <CardTitle className="text-lg">{restaurant.name}</CardTitle>
+            {restaurant.ai_summary && (
+              <p className="text-sm text-muted-foreground mt-0.5">{restaurant.ai_summary}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0 ml-2">
             {restaurant.proximity && (
               <div className="flex items-center gap-1 text-blue-500">
                 <Navigation className="h-4 w-4" />
@@ -66,6 +72,13 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Pro
           )}
           {isChosen && (
             <span className="text-sm text-primary font-medium self-center">✓ 已選擇</span>
+          )}
+          {onDelete && (
+            <Link href={`/restaurants/${restaurant.id}/edit`}>
+              <button className="text-xs text-blue-400 hover:text-blue-600">
+                編輯
+              </button>
+            </Link>
           )}
           {onDelete && (
             <button
