@@ -34,13 +34,13 @@ export async function getRecommendation(
   const restaurantList = restaurants
     .map((r, i) =>
       `[${i}] ${r.name}` +
-      ` | 捷運: ${r.mrt_station ?? '未知'}` +
-      ` | 品項: ${r.items.length ? r.items.join('、') : '未填'}` +
-      ` | 標籤: ${r.tags.length ? r.tags.join('、') : '無'}` +
       ` | 摘要: ${r.ai_summary ?? '無'}` +
+      ` | 標籤: ${r.tags.length ? r.tags.join('、') : '無'}` +
+      ` | 評語: ${r.review ?? '無'}` +
+      ` | 品項: ${r.items.length ? r.items.join('、') : '未填'}` +
+      ` | 捷運: ${r.mrt_station ?? '未知'}` +
       ` | 評分: ${r.rating ?? '未吃過'}` +
-      ` | ${r.visited ? `已造訪 ${r.visit_date?.slice(0, 10)}` : '未造訪'}` +
-      ` | 短評: ${r.review ?? '無'}`
+      ` | ${r.visited ? '已造訪' : '未造訪'}`
     )
     .join('\n')
 
@@ -51,7 +51,7 @@ export async function getRecommendation(
     system: [
       {
         type: 'text',
-        text: '你是美食推薦助理。從餐廳清單中推薦最合適的最多三家，標籤是重要因子，以 JSON 回覆。',
+        text: '你是美食推薦助理。從餐廳清單中推薦最合適的最多三家，摘要與標籤是重要因子，以 JSON 回覆。',
       },
       {
         type: 'text',
