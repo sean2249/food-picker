@@ -39,7 +39,11 @@ export default function EditRestaurantPage({ params }: { params: Promise<{ id: s
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">編輯餐廳</h1>
-      <RestaurantForm onSubmit={handleSubmit} initialData={restaurant} />
+      <RestaurantForm
+        onSubmit={handleSubmit}
+        initialData={restaurant}
+        onCancel={() => router.back()}
+      />
     </div>
   )
 }
