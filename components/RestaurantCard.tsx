@@ -50,8 +50,10 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Pro
           {restaurant.items.map(item => (
             <Badge key={item} variant="secondary">{item}</Badge>
           ))}
-          {!restaurant.visited && (
-            <Badge variant="outline">未造訪</Badge>
+          {restaurant.visited ? (
+            <Badge className="bg-green-100 text-green-700 border-green-200">✓ 已造訪</Badge>
+          ) : (
+            <Badge variant="outline" className="text-muted-foreground">未造訪</Badge>
           )}
         </div>
         {restaurant.tags.length > 0 && (
