@@ -1,4 +1,5 @@
 import r1 from '../docs/releases/2026-04-20-v1.0.0.md'
+import r2 from '../docs/releases/2026-04-20-v1.1.0.md'
 
 interface Release {
   filename: string
@@ -7,6 +8,7 @@ interface Release {
 
 const all: Release[] = [
   { filename: '2026-04-20-v1.0.0.md', content: r1 },
+  { filename: '2026-04-20-v1.1.0.md', content: r2 },
 ]
 
 export const releases = all
