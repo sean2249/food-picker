@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 美食選擇器
 
-## Getting Started
+根據你的心情與天氣，透過 AI 推薦最適合的餐廳。
 
-First, run the development server:
+## 功能
+
+- 心情輸入 → Claude AI 推薦餐廳
+- 餐廳清單管理（新增、編輯、刪除）
+- Telegram Bot 支援（`/hungry` 指令）
+- 推薦紀錄歷史
+
+## 技術架構
+
+- **Frontend / Backend**: Next.js 16 (App Router)
+- **資料庫**: Supabase (PostgreSQL)
+- **AI**: Anthropic Claude (claude-haiku-4-5)
+- **Telegram Bot**: Telegraf + Webhook
+- **部署**: Cloudflare Workers (via @opennextjs/cloudflare)
+
+## 本地開發
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+開啟 [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 環境變數
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+複製 `.env.local.example` 並填入值：
 
-## Learn More
+```bash
+cp .env.local.example .env.local
+```
 
-To learn more about Next.js, take a look at the following resources:
+| 變數 | 說明 |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 專案 URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
+| `ANTHROPIC_API_KEY` | Anthropic API key |
+| `TELEGRAM_BOT_TOKEN` | Telegram Bot token（從 @BotFather 取得） |
+| `TELEGRAM_WEBHOOK_URL` | Telegram Webhook URL（`https://<your-domain>/api/telegram`） |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Telegram Bot
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+啟動本地 Bot（長輪詢模式）：
 
-## Deploy on Vercel
+```bash
+npm run bot
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+部署後設定 Webhook：
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<your-domain>/api/telegram"
+```
+
+## 部署到 Cloudflare Workers
+
+```bash
+# 一鍵 build + deploy
+bash scripts/deploy.sh
+
+# 或分開執行
+npm run cf:build
+npm run cf:deploy
+```
+
+> **注意**：Next.js 16 預設使用 Turbopack，但 @opennextjs/cloudflare 不支援 Turbopack 的 SSR chunk 格式。
+> `package.json` 中的 `build` script 已加上 `--webpack` 繞過此問題。
+
+上傳 Cloudflare Secrets：
+
+```bash
+wrangler secret put ANTHROPIC_API_KEY
+wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+wrangler secret put TELEGRAM_BOT_TOKEN
+# ... 其他變數
+```
