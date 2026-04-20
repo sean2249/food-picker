@@ -23,9 +23,10 @@ const PROXIMITY_LABELS: Record<number, string> = {
 interface Props {
   onSubmit: (data: Partial<Restaurant>) => Promise<void>
   initialData?: Restaurant
+  onCancel?: () => void
 }
 
-export function RestaurantForm({ onSubmit, initialData }: Props) {
+export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
   const isEdit = !!initialData
 
   const [name, setName] = useState(initialData?.name ?? '')
@@ -33,9 +34,6 @@ export function RestaurantForm({ onSubmit, initialData }: Props) {
   const [items, setItems] = useState<string[]>(initialData?.items ?? [])
   const [itemInput, setItemInput] = useState('')
   const [visited, setVisited] = useState(initialData?.visited ?? false)
-  const [visitDate, setVisitDate] = useState(
-    initialData?.visit_date ? initialData.visit_date.slice(0, 10) : ''
-  )
   const [rating, setRating] = useState<number | null>(initialData?.rating ?? null)
   const [review, setReview] = useState(initialData?.review ?? '')
   const [proximity, setProximity] = useState<number>(initialData?.proximity ?? 5)
@@ -112,7 +110,6 @@ export function RestaurantForm({ onSubmit, initialData }: Props) {
       mrt_station: mrtStation.trim() || null,
       items,
       visited,
-      visit_date: visited && visitDate ? new Date(visitDate).toISOString() : null,
       rating: visited ? rating : null,
       review: review.trim() || null,
       proximity,
@@ -178,10 +175,6 @@ export function RestaurantForm({ onSubmit, initialData }: Props) {
       </div>
       {visited && (
         <>
-          <div>
-            <Label>造訪日期</Label>
-            <Input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} />
-          </div>
           <div>
             <Label>評分 (1-5)</Label>
             <div className="flex gap-2 mt-1">
@@ -255,9 +248,16 @@ export function RestaurantForm({ onSubmit, initialData }: Props) {
           </div>
         </>
       )}
-      <Button type="submit" disabled={loading} className="w-full">
-        {loading ? '儲存中...' : isEdit ? '儲存變更' : '新增餐廳'}
-      </Button>
+      <div className="flex gap-2">
+        <Button type="submit" disabled={loading} className="flex-1">
+          {loading ? '儲存中...' : isEdit ? '儲存變更' : '新增餐廳'}
+        </Button>
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
+            取消
+          </Button>
+        )}
+      </div>
     </form>
   )
 }
