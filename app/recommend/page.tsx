@@ -63,6 +63,7 @@ export default function RecommendPage() {
     })
     const data = await res.json()
     setResult(data)
+    setFiltersOpen(true)
     setLoading(false)
   }
 
@@ -167,6 +168,14 @@ export default function RecommendPage() {
 
       {result && (
         <div className="space-y-4 pt-2 border-t">
+          <Button
+            onClick={handleRecommend}
+            disabled={loading}
+            variant="outline"
+            className="w-full"
+          >
+            {loading ? '推薦中...' : '調整篩選後重新推薦'}
+          </Button>
           {result.reasoning && (
             <div className="rounded-xl bg-primary/5 p-4 border border-primary/20">
               <p className="text-sm text-muted-foreground">{result.reasoning}</p>
