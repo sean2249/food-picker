@@ -15,9 +15,6 @@ export default function Home() {
           <Link href="/restaurants/new">
             <Button variant="outline" className="w-full">新增餐廳</Button>
           </Link>
-          <Link href="/restaurants">
-            <Button variant="ghost" className="w-full">查看所有餐廳</Button>
-          </Link>
         </div>
       </div>
 
@@ -33,7 +30,7 @@ export default function Home() {
             </summary>
             <ul className="px-6 pb-3 pt-1 space-y-1">
               {parseReleaseSections(release.content).map(section => (
-                <li key={section} className="text-sm text-muted-foreground list-disc ml-2">{section}</li>
+                <li key={section} className="text-sm text-muted-foreground">{section}</li>
               ))}
             </ul>
           </details>

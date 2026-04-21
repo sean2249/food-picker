@@ -89,7 +89,7 @@ export default function RecommendPage() {
         <Input
           value={item}
           onChange={e => setItem(e.target.value)}
-          placeholder="例：我想要包子、今天心情不美麗"
+          placeholder="例：我想要包子、今天心情如何"
         />
       </div>
 
