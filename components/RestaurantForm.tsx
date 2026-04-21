@@ -130,8 +130,8 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
         </div>
       )}
       <div>
-        <Label>短評 / 備註</Label>
-        <Textarea value={review} onChange={e => setReview(e.target.value)} placeholder="口感如何？推薦指數？" />
+        <Label>共用欄位：未去過的備註 & 去過的短評</Label>
+        <Textarea value={review} onChange={e => setReview(e.target.value)} placeholder="這家聽說什麼好吃？吃過的人怎麼說？你會怎麼跟別人介紹這家餐廳" />
         {review.trim() && (
           <div className="flex gap-2 mt-2">
             <Button
