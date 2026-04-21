@@ -33,6 +33,26 @@ export default function RestaurantsPage() {
 
   if (loading) return <p className="text-center text-muted-foreground">載入中...</p>
 
+  const getFilterButtonClass = (target: Tab): string => {
+    const active = tab === target
+
+    if (target === '已造訪') {
+      return active
+        ? 'bg-[#E46C0A] text-white border-[#E46C0A]'
+        : 'border-[#E46C0A]/40 text-[#A04D08] hover:bg-[#E46C0A]/10'
+    }
+
+    if (target === '未造訪') {
+      return active
+        ? 'bg-[#F5F5F5] text-[#4A4A4A] border-[#E0E0E0]'
+        : 'border-[#E0E0E0] text-[#666666] hover:bg-[#F7F7F7]'
+    }
+
+    return active
+      ? 'bg-primary text-primary-foreground border-primary'
+      : 'border-border hover:bg-muted'
+  }
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">餐廳清單</h1>
@@ -41,11 +61,7 @@ export default function RestaurantsPage() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-              tab === t
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'border-border hover:bg-muted'
-            }`}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${getFilterButtonClass(t)}`}
           >
             {t}
           </button>

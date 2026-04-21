@@ -13,15 +13,20 @@ interface Props {
 }
 
 export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Props) {
+  const statusStripeClass = restaurant.visited
+    ? 'w-2 bg-[#E46C0A]'
+    : 'w-[2px] bg-[#E0E0E0]'
+
   return (
-    <Card className={`w-full ${isChosen ? 'ring-2 ring-primary' : ''}`}>
+    <Card className={`w-full relative overflow-hidden ${isChosen ? 'ring-2 ring-primary' : ''}`}>
+      <div aria-hidden className={`absolute left-0 top-0 h-full ${statusStripeClass}`} />
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="text-lg">{restaurant.name}</CardTitle>
-            {restaurant.ai_summary && (
+            {/* {restaurant.ai_summary && (
               <p className="text-sm text-muted-foreground mt-0.5">{restaurant.ai_summary}</p>
-            )}
+            )} */}
           </div>
           <div className="flex items-center gap-2 shrink-0 ml-2">
             {restaurant.proximity && (
@@ -47,9 +52,6 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Pro
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-1 mb-2">
-          {restaurant.items.map(item => (
-            <Badge key={item} variant="secondary">{item}</Badge>
-          ))}
           {restaurant.visited ? (
             <Badge className="bg-green-100 text-green-700 border-green-200">✓ 已造訪</Badge>
           ) : (
@@ -77,7 +79,7 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Pro
           )}
           {onDelete && (
             <Link href={`/restaurants/${restaurant.id}/edit`}>
-              <button className="text-xs text-blue-400 hover:text-blue-600">
+              <button className="text-xs text-blue-500 hover:text-blue-700">
                 編輯
               </button>
             </Link>

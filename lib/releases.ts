@@ -1,19 +1,17 @@
-import r1 from '../docs/releases/2026-04-20-v1.0.0.md'
-import r2 from '../docs/releases/2026-04-20-v1.1.0.md'
+import { generatedReleases } from './releases.generated'
 
 interface Release {
   filename: string
   content: string
 }
 
-const all: Release[] = [
-  { filename: '2026-04-20-v1.0.0.md', content: r1 },
-  { filename: '2026-04-20-v1.1.0.md', content: r2 },
-]
+const all: Release[] = generatedReleases
+
+export const RELEASE_LIMIT = 3
 
 export const releases = all
   .sort((a, b) => b.filename.localeCompare(a.filename))
-  .slice(0, 3)
+  .slice(0, RELEASE_LIMIT)
 
 export function parseReleaseTitle(content: string): string {
   return content.match(/^# (.+)$/m)?.[1] ?? '更新記錄'

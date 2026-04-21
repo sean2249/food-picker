@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { X } from 'lucide-react'
 import { Restaurant } from '@/types'
 
 const PROXIMITY_LABELS: Record<number, string> = {
@@ -31,28 +30,15 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
 
   const [name, setName] = useState(initialData?.name ?? '')
   const [mrtStation, setMrtStation] = useState(initialData?.mrt_station ?? '')
-  const [items, setItems] = useState<string[]>(initialData?.items ?? [])
-  const [itemInput, setItemInput] = useState('')
+  const [items] = useState<string[]>(initialData?.items ?? [])
   const [visited, setVisited] = useState(initialData?.visited ?? false)
   const [rating, setRating] = useState<number | null>(initialData?.rating ?? null)
   const [review, setReview] = useState(initialData?.review ?? '')
   const [proximity, setProximity] = useState<number>(initialData?.proximity ?? 5)
   const [tags, setTags] = useState<string[]>(initialData?.tags ?? [])
   const [tagInput, setTagInput] = useState('')
-  const [aiSummary, setAiSummary] = useState(initialData?.ai_summary ?? '')
   const [generatingTags, setGeneratingTags] = useState(false)
-  const [generatingSummary, setGeneratingSummary] = useState(false)
   const [loading, setLoading] = useState(false)
-
-  const addItem = () => {
-    const trimmed = itemInput.trim()
-    if (trimmed && !items.includes(trimmed)) {
-      setItems(prev => [...prev, trimmed])
-      setItemInput('')
-    }
-  }
-
-  const removeItem = (item: string) => setItems(prev => prev.filter(i => i !== item))
 
   const addTag = () => {
     const trimmed = tagInput.trim()
@@ -63,10 +49,6 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
   }
 
   const removeTag = (tag: string) => setTags(prev => prev.filter(t => t !== tag))
-
-  const handleItemKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') { e.preventDefault(); addItem() }
-  }
 
   const handleTagKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') { e.preventDefault(); addTag() }
@@ -87,20 +69,6 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
     setGeneratingTags(false)
   }
 
-  const handleGenerateSummary = async () => {
-    setGeneratingSummary(true)
-    const res = await fetch('/api/restaurants/generate-summary', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items, review: review.trim() || null, tags }),
-    })
-    if (res.ok) {
-      const data = await res.json()
-      setAiSummary(data.ai_summary ?? '')
-    }
-    setGeneratingSummary(false)
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
@@ -114,7 +82,6 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
       review: review.trim() || null,
       proximity,
       tags,
-      ai_summary: aiSummary.trim() || null,
     })
     setLoading(false)
   }
@@ -143,111 +110,65 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
           <p className="text-sm text-muted-foreground">{PROXIMITY_LABELS[proximity]}</p>
         </div>
       </div>
-      <div>
-        <Label>品項</Label>
-        <div className="flex gap-2 mt-1">
-          <Input
-            value={itemInput}
-            onChange={e => setItemInput(e.target.value)}
-            onKeyDown={handleItemKeyDown}
-            placeholder="例：提拉米蘇、焦糖拿鐵（Enter 新增）"
-            className="flex-1"
-          />
-          <Button type="button" variant="outline" onClick={addItem}>新增</Button>
-        </div>
-        {items.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {items.map(item => (
-              <span key={item}
-                className="flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-primary text-primary-foreground">
-                {item}
-                <button type="button" onClick={() => removeItem(item)} className="hover:opacity-70">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
       <div className="flex items-center gap-2">
         <input type="checkbox" id="visited" checked={visited} onChange={e => setVisited(e.target.checked)} />
         <Label htmlFor="visited">已造訪</Label>
       </div>
       {visited && (
-        <>
-          <div>
-            <Label>評分 (1-5)</Label>
-            <div className="flex gap-2 mt-1">
-              {[1,2,3,4,5].map(n => (
-                <button type="button" key={n} onClick={() => setRating(n)}
-                  className={`w-10 h-10 rounded-full border text-sm font-medium ${
-                    rating === n ? 'bg-primary text-primary-foreground' : 'border-border'
-                  }`}>
-                  {n}
-                </button>
-              ))}
-            </div>
+        <div>
+          <Label>評分 (1-5)</Label>
+          <div className="flex gap-2 mt-1">
+            {[1,2,3,4,5].map(n => (
+              <button type="button" key={n} onClick={() => setRating(n)}
+                className={`w-10 h-10 rounded-full border text-sm font-medium ${
+                  rating === n ? 'bg-primary text-primary-foreground' : 'border-border'
+                }`}>
+                {n}
+              </button>
+            ))}
           </div>
-          <div>
-            <Label>短評</Label>
-            <Textarea value={review} onChange={e => setReview(e.target.value)} placeholder="口感如何？推薦指數？" />
-            <div className="flex gap-2 mt-2">
-              {review.trim() && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleGenerateTags}
-                  disabled={generatingTags}
-                >
-                  {generatingTags ? '生成標籤中...' : '建議標籤'}
-                </Button>
-              )}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleGenerateSummary}
-                disabled={generatingSummary}
-              >
-                {generatingSummary ? '生成中...' : '生成 AI 摘要'}
-              </Button>
-            </div>
-          </div>
-          <div>
-            <Label>標籤</Label>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {tags.map(tag => (
-                <span key={tag} className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-primary text-primary-foreground">
-                  {tag}
-                  <button type="button" onClick={() => removeTag(tag)} className="hover:opacity-70">
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-2">
-              <Input
-                value={tagInput}
-                onChange={e => setTagInput(e.target.value)}
-                onKeyDown={handleTagKeyDown}
-                placeholder="手動新增標籤（Enter）"
-                className="flex-1"
-              />
-              <Button type="button" variant="outline" onClick={addTag}>新增</Button>
-            </div>
-          </div>
-          <div>
-            <Label>AI 摘要</Label>
-            <Textarea
-              value={aiSummary}
-              onChange={e => setAiSummary(e.target.value)}
-              placeholder="點「生成 AI 摘要」自動填寫，也可手動編輯"
-              rows={2}
-            />
-          </div>
-        </>
+        </div>
       )}
+      <div>
+        <Label>短評 / 備註</Label>
+        <Textarea value={review} onChange={e => setReview(e.target.value)} placeholder="口感如何？推薦指數？" />
+        {review.trim() && (
+          <div className="flex gap-2 mt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateTags}
+              disabled={generatingTags}
+            >
+              {generatingTags ? '生成標籤中...' : '建議標籤'}
+            </Button>
+          </div>
+        )}
+      </div>
+      <div>
+        <Label>標籤</Label>
+        <div className="flex flex-wrap gap-1 mt-1">
+          {tags.map(tag => (
+            <span key={tag} className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-primary text-primary-foreground">
+              {tag}
+              <button type="button" onClick={() => removeTag(tag)} className="hover:opacity-70">
+                X
+              </button>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2 mt-2">
+          <Input
+            value={tagInput}
+            onChange={e => setTagInput(e.target.value)}
+            onKeyDown={handleTagKeyDown}
+            placeholder="手動新增標籤（Enter）"
+            className="flex-1"
+          />
+          <Button type="button" variant="outline" onClick={addTag}>新增</Button>
+        </div>
+      </div>
       <div className="flex gap-2">
         <Button type="submit" disabled={loading} className="flex-1">
           {loading ? '儲存中...' : isEdit ? '儲存變更' : '新增餐廳'}

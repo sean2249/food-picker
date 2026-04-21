@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "generate:releases": "node scripts/generate-releases.mjs",
+    "build": "npm run generate:releases && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "cf:build": "opennextjs-cloudflare build",

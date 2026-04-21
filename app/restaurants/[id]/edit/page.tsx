@@ -39,6 +39,12 @@ export default function EditRestaurantPage({ params }: { params: Promise<{ id: s
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">編輯餐廳</h1>
+      {restaurant.ai_summary && (
+        <section className="rounded-lg border bg-muted/30 p-3">
+          <p className="text-xs text-muted-foreground mb-1">AI 摘要（唯讀）</p>
+          <p className="text-sm leading-6">{restaurant.ai_summary}</p>
+        </section>
+      )}
       <RestaurantForm
         onSubmit={handleSubmit}
         initialData={restaurant}
