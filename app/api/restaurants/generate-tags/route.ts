@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: 'user',
-          content: `根據以下餐廳資訊，生成 3-5 個簡短的繁體中文標籤（每個標籤 2-4 字）。
+          content: `根據以下餐廳資訊，生成 3-7 個簡短的繁體中文標籤（每個標籤 2-4 字）。
 只回覆 JSON 陣列，例如：["咖啡廳", "甜點", "適合約會"]
 
 餐廳：${name}

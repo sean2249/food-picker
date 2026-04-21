@@ -32,7 +32,7 @@ export async function generateRestaurantSummary(input: SummaryInput): Promise<st
     messages: [
       {
         role: 'user',
-        content: `根據以下資訊，用一句話描述這家餐廳的特色（繁體中文，不超過30字）：${parts}`,
+        content: `根據以下資訊，用一句話描述這家餐廳的特色（繁體中文，不超過50字）：${parts}`,
       },
     ],
   })
