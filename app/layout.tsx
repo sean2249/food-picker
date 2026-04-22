@@ -1,9 +1,14 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Noto_Serif_TC } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
 
-const inter = Inter({ subsets: ['latin'] })
+const notoSerifTC = Noto_Serif_TC({
+  subsets: ['latin'],
+  weight: ['400', '700', '900'],
+  variable: '--font-serif',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: '美食選擇器',
@@ -12,8 +17,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-TW">
-      <body className={inter.className}>
+    <html lang="zh-TW" className={notoSerifTC.variable}>
+      <body>
         <nav className="border-b px-4 py-3 flex gap-6 text-sm font-medium">
           <Link href="/" className="hover:text-primary">首頁</Link>
           <Link href="/recommend" className="hover:text-primary">推薦給我</Link>
