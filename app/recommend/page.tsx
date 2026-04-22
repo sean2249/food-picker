@@ -106,21 +106,23 @@ export default function RecommendPage() {
         {filtersOpen && (
           <div className="px-4 pb-4 space-y-4 border-t">
             <div className="pt-4">
-              <Label className="text-xs text-muted-foreground">已造訪</Label>
-              <div className="flex gap-3 mt-1">
-                {([['all', '全部'], ['unvisited', '只推未造訪'], ['visited', '只推已造訪']] as const).map(([val, label]) => (
-                  <label key={val} className="flex items-center gap-1.5 text-sm cursor-pointer">
-                    <input
-                      type="radio"
-                      name="visited_filter"
-                      value={val}
-                      checked={visitedFilter === val}
-                      onChange={() => setVisitedFilter(val)}
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
+              <fieldset>
+                <legend className="text-sm font-bold mb-2 text-foreground">造訪狀態篩選</legend>
+                <div className="flex gap-3 mt-1">
+                  {([['all', '全部'], ['unvisited', '只推未造訪'], ['visited', '只推已造訪']] as const).map(([val, label]) => (
+                    <label key={val} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                      <input
+                        type="radio"
+                        name="visited_filter"
+                        value={val}
+                        checked={visitedFilter === val}
+                        onChange={() => setVisitedFilter(val)}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
             </div>
 
             {allTags.length > 0 && (

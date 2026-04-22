@@ -106,6 +106,8 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
             value={proximity}
             onChange={e => setProximity(Number(e.target.value))}
             className="w-full"
+            aria-label="距離範圍"
+            aria-valuetext={PROXIMITY_LABELS[proximity]}
           />
           <p className="text-sm text-muted-foreground">{PROXIMITY_LABELS[proximity]}</p>
         </div>
@@ -120,7 +122,7 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
           <div className="flex gap-2 mt-1">
             {[1,2,3,4,5].map(n => (
               <button type="button" key={n} onClick={() => setRating(n)}
-                className={`w-10 h-10 rounded-full border text-sm font-medium ${
+                className={`w-11 h-11 rounded-full border text-sm font-medium ${
                   rating === n ? 'bg-primary text-primary-foreground' : 'border-border'
                 }`}>
                 {n}
@@ -152,8 +154,8 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
           {tags.map(tag => (
             <span key={tag} className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-primary text-primary-foreground">
               {tag}
-              <button type="button" onClick={() => removeTag(tag)} className="hover:opacity-70">
-                X
+              <button type="button" onClick={() => removeTag(tag)} className="hover:opacity-70 p-1.5 -mr-1">
+                ×
               </button>
             </span>
           ))}
