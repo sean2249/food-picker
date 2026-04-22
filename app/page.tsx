@@ -6,11 +6,11 @@ export default function Home() {
   return (
     <div className="space-y-8 pt-12">
       <div className="text-center space-y-6">
-        <h1 className="text-4xl font-bold">美食選擇器</h1>
+        <h1 className="text-3xl font-black">美食選擇器</h1>
         <p className="text-muted-foreground">說出你的想法，我來幫你找到最適合的美食！</p>
         <div className="flex flex-col gap-3 max-w-xs mx-auto">
             <Link href="/recommend">
-            <Button size="lg" className="w-full" style={{ backgroundColor: '#E46C0A', borderColor: '#C0504D', color: '#FFFFFF' }}>🍽️ 我餓了！推薦我</Button>
+            <Button size="lg" className="w-full bg-brand text-brand-foreground hover:bg-brand/90 font-bold">🍽️ 我餓了！推薦我</Button>
             </Link>
           <Link href="/restaurants/new">
             <Button variant="outline" className="w-full" >📥 新增餐廳</Button>
@@ -19,7 +19,7 @@ export default function Home() {
       </div>
 
       <div className="border rounded-xl overflow-hidden">
-        <p className="px-4 py-3 text-sm font-semibold border-b bg-muted/30">更新記錄</p>
+        <h2 className="px-4 py-3 text-sm font-semibold border-b bg-muted/30">更新記錄</h2>
         {releases.map((release, i) => (
           <details key={release.filename} open={i === 0} className="border-b last:border-0">
             <summary className="px-4 py-3 text-sm cursor-pointer hover:bg-muted list-none flex items-center justify-between">
