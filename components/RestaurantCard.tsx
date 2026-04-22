@@ -1,8 +1,10 @@
+ 'use client'
+import { useState } from 'react'
 import { Restaurant } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Star, MapPin, Navigation } from 'lucide-react'
+import { Star } from 'lucide-react'
 import Link from 'next/link'
 
 interface Props {
@@ -12,31 +14,37 @@ interface Props {
   isChosen?: boolean
 }
 
+function ProximityIcon({ score }: { score: number }) {
+  // proximity scale: 1 = far (overseas), 10 = very close (walking distance)
+  if (score >= 8) return <span aria-label="步行距離">🦶</span>
+  if (score >= 5) return <span aria-label="搭車距離">🚌</span>
+  return <span aria-label="開車距離">🚗</span>
+}
+
 export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Props) {
-  const statusStripeClass = restaurant.visited
-    ? 'w-2 bg-[#E46C0A]'
-    : 'w-[2px] bg-[#E0E0E0]'
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   return (
-    <Card className={`w-full relative overflow-hidden ${isChosen ? 'ring-2 ring-primary' : ''}`}>
-      <div aria-hidden className={`absolute left-0 top-0 h-full ${statusStripeClass}`} />
+    <Card className={`w-full relative overflow-hidden ${isChosen ? 'ring-2 ring-brand' : ''}`}>
+      {restaurant.visited && (
+        <div className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full border-2 border-brand flex items-center justify-center -rotate-12 shrink-0 z-10">
+          <span className="text-[9px] font-black text-brand text-center leading-tight select-none">{'已\n訪'}</span>
+        </div>
+      )}
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg">{restaurant.name}</CardTitle>
-            {/* {restaurant.ai_summary && (
-              <p className="text-sm text-muted-foreground mt-0.5">{restaurant.ai_summary}</p>
-            )} */}
+          <div className={restaurant.visited ? 'pr-12' : ''}>
+            <CardTitle className="text-base font-bold">{restaurant.name}</CardTitle>
           </div>
           <div className="flex items-center gap-2 shrink-0 ml-2">
             {restaurant.proximity && (
-              <div className="flex items-center gap-1 text-blue-500">
-                <Navigation className="h-4 w-4" />
+              <div className="flex items-center gap-1 text-brand">
+                <ProximityIcon score={restaurant.proximity} />
                 <span className="text-sm font-medium">{restaurant.proximity}/10</span>
               </div>
             )}
             {restaurant.rating && (
-              <div className="flex items-center gap-1 text-yellow-500">
+              <div className="flex items-center gap-1 text-brand">
                 <Star className="h-4 w-4 fill-current" />
                 <span className="text-sm font-medium">{restaurant.rating}</span>
               </div>
@@ -44,16 +52,15 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Pro
           </div>
         </div>
         {restaurant.mrt_station && (
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <MapPin className="h-3 w-3" />
-            {restaurant.mrt_station}
+          <div className="text-xs text-muted-foreground mt-0.5">
+            📍 {restaurant.mrt_station}
           </div>
         )}
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-1 mb-2">
           {restaurant.visited ? (
-            <Badge className="bg-green-100 text-green-700 border-green-200">✓ 已造訪</Badge>
+            <Badge className="bg-visited text-visited-foreground border-visited">✓ 已造訪</Badge>
           ) : (
             <Badge variant="outline" className="text-muted-foreground">未造訪</Badge>
           )}
@@ -66,31 +73,52 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Pro
           </div>
         )}
         {restaurant.review && (
-          <p className="text-sm text-muted-foreground">{restaurant.review}</p>
+          <p className="text-sm text-muted-foreground italic">{restaurant.review}</p>
         )}
-        <div className="flex gap-2 mt-2">
+        <div className="flex gap-2 mt-3 items-center">
           {onChoose && (
-            <Button size="sm" onClick={onChoose} className="flex-1">
-              就選這家！
+            <Button
+              size="sm"
+              onClick={onChoose}
+              className="flex-1 bg-brand text-brand-foreground hover:bg-brand/90 font-bold"
+            >
+              🍜 就選這家！
             </Button>
           )}
           {isChosen && (
-            <span className="text-sm text-primary font-medium self-center">✓ 已選擇</span>
+            <span className="text-sm text-brand font-medium self-center">✓ 已選擇</span>
           )}
           {onDelete && (
             <Link href={`/restaurants/${restaurant.id}/edit`}>
-              <button className="text-xs text-blue-500 hover:text-blue-700">
+              <Button variant="ghost" size="sm" className="py-2 px-3 text-sm">
                 編輯
-              </button>
+              </Button>
             </Link>
           )}
-          {onDelete && (
+          {onDelete && !confirmingDelete && (
             <button
-              onClick={() => onDelete(restaurant.id)}
-              className="text-xs text-red-400 hover:text-red-600"
+              onClick={() => setConfirmingDelete(true)}
+              className="py-2 px-3 text-sm text-muted-foreground hover:text-destructive"
             >
               刪除
             </button>
+          )}
+          {confirmingDelete && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">確定？</span>
+              <button
+                onClick={() => { onDelete!(restaurant.id); setConfirmingDelete(false) }}
+                className="font-bold text-destructive py-1 px-2"
+              >
+                是
+              </button>
+              <button
+                onClick={() => setConfirmingDelete(false)}
+                className="text-muted-foreground py-1 px-2"
+              >
+                否
+              </button>
+            </div>
           )}
         </div>
       </CardContent>
