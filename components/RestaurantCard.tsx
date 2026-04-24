@@ -15,10 +15,12 @@ interface Props {
 }
 
 function ProximityIcon({ score }: { score: number }) {
-  // proximity scale: 1 = far (overseas), 10 = very close (walking distance)
-  if (score >= 8) return <span aria-label="步行距離">🦶</span>
-  if (score >= 5) return <span aria-label="搭車距離">🚌</span>
-  return <span aria-label="開車距離">🚗</span>
+  // proximity scale: 1 = very close (walking), 10 = far (overseas)
+  if (score <= 3) return <span aria-label="步行距離">🦶</span>
+  if (score <= 6) return <span aria-label="搭車距離">🚇</span>
+  if (score <= 7) return <span aria-label="開車距離">🚗</span>
+  if (score <= 9) return <span aria-label="高鐵距離">🚄</span>
+  return <span aria-label="飛機距離">✈️</span>
 }
 
 export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Props) {
@@ -27,13 +29,13 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Pro
   return (
     <Card className={`w-full relative overflow-hidden ${isChosen ? 'ring-2 ring-brand' : ''}`}>
       {restaurant.visited && (
-        <div className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full border-2 border-brand flex items-center justify-center -rotate-12 shrink-0 z-10">
+        <div className="absolute top-2.5 left-2.5 w-9 h-9 rounded-full border-2 border-brand flex items-center justify-center -rotate-12 shrink-0 z-10">
           <span className="text-[9px] font-black text-brand text-center leading-tight select-none">{'已\n訪'}</span>
         </div>
       )}
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div className={restaurant.visited ? 'pr-12' : ''}>
+        <div className={`flex items-start justify-between ${restaurant.visited ? 'pl-11' : ''}`}>
+          <div>
             <CardTitle className="text-base font-bold">{restaurant.name}</CardTitle>
           </div>
           <div className="flex items-center gap-2 shrink-0 ml-2">
@@ -58,13 +60,6 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Pro
         )}
       </CardHeader>
       <CardContent>
-        <div className="flex flex-wrap gap-1 mb-2">
-          {restaurant.visited ? (
-            <Badge className="bg-visited text-visited-foreground border-visited">✓ 已造訪</Badge>
-          ) : (
-            <Badge variant="outline" className="text-muted-foreground">未造訪</Badge>
-          )}
-        </div>
         {restaurant.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
             {restaurant.tags.map(tag => (
