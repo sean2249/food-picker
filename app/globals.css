@@ -31,6 +31,7 @@
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
+  --color-nav-bg: var(--nav-bg);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
@@ -57,6 +58,7 @@
   --background: oklch(0.980 0.010 72);
   --card: oklch(0.995 0.008 72);
   --muted: oklch(0.945 0.012 70);
+  --nav-bg: oklch(0.960 0.018 70);   /* warm amber-tinted header strip */
 
   /* Text - warm browns, not pure black */
   --foreground: oklch(0.180 0.025 55);

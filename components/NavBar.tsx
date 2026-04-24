@@ -20,7 +20,7 @@ export function NavBar() {
   const pathname = usePathname()
 
   return (
-    <header className="border-b border-border">
+    <header className="border-b border-amber-200/60 bg-[--nav-bg] shadow-[0_1px_3px_0_oklch(0.580_0.165_48_/_0.07)]">
       <nav className="px-4 py-2 flex gap-4 items-center text-sm font-medium">
         {navLinks.map(({ href, label, primary }) => {
           const active = isActive(href, pathname)
