@@ -32,6 +32,17 @@ export default function RestaurantsPage() {
 
   const getFilterButtonClass = (target: Tab): string => {
     const active = tab === target
+
+    if (target === '已造訪') {
+      if (active) return 'bg-visited text-visited-foreground border-visited'
+      return 'border-visited text-visited-foreground hover:bg-visited/35'
+    }
+
+    if (target === '未造訪') {
+      if (active) return 'bg-muted text-foreground border-border'
+      return 'border-border text-muted-foreground hover:bg-muted'
+    }
+
     if (active) return 'bg-brand text-brand-foreground border-brand'
     return 'border-border text-muted-foreground hover:bg-muted'
   }

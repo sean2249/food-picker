@@ -43,7 +43,7 @@ restaurants (
   visit_date timestamptz,
   rating smallint,       -- 1-5
   review text,
-  proximity smallint,    -- 1-10 (1=far, 10=very close)
+  proximity smallint,    -- 1-10 (1=closest, 10=farthest)
   tags text[],           -- AI-generated from review
   created_at, updated_at timestamptz
 )
@@ -91,6 +91,32 @@ supabase/
 - **API routes** use `createServiceClient()` (service role key), never the anon client
 - **Route params** must be `Promise<{ id: string }>` and awaited — Next.js 16 breaking change
 - **Recommendation engine** (`lib/recommendation.ts`): static restaurant list uses `cache_control: ephemeral` for Anthropic prompt caching
+- **Proximity is canonical**: `1 = closest`, `10 = farthest` (numeric ascending means farther)
+- **UI/logic alignment rule**: proximity labels, icons, filters, and API comments must all follow the same direction above; do not invert this mapping
 - **No test framework** — use `npx tsc --noEmit` to gate correctness
 - **No mood feature** — removed; `mood_logs` table exists in DB for history but is no longer written to
+
+## Design Context
+
+### Users
+Friends of the creator, primarily using on mobile phones. The typical moment of use: standing somewhere, hungry, reaching for the phone to get a quick recommendation. The context is casual, personal, and social — this isn't a productivity tool, it's a comfort tool.
+
+### Brand Personality
+**3 words: handmade, healing, local**
+
+The app should feel like a warm notebook a friend keeps of their favorite spots — not a polished tech product. It evokes the feeling of being taken care of through food (療癒). Texture and life-like imperfection are welcome: subtle hand-drawn food illustration motifs in the background, warm off-white surfaces, and playful iconography (footprints for walking distance, a bus icon for transit) that make the interface feel alive and personal rather than generic.
+
+### Aesthetic Direction
+- **Theme**: Light mode — warm, off-white surfaces (not pure white), like aged paper or a well-used recipe card
+- **Color palette**: Warm neutrals tinted toward amber/orange. The primary accent is a warm orange (reference: `#E46C0A` already in use) — reserved for the main CTA. Avoid cool grays; everything should lean warm.
+- **Anti-references**: No tech-y feel — no blue system colors, no sharp geometric grids, no dashboard-style layouts. Should not look like a SaaS product or a food delivery app (Uber Eats, Foodpanda).
+- **Texture**: Subtle background pattern with faint hand-drawn food ingredient illustrations (linework, not filled shapes). Low contrast against the surface — atmosphere, not decoration.
+- **Iconography**: Contextual and playful — footprint icon for walking, bus for transit, etc. Icons should feel expressive, not purely functional.
+
+### Design Principles
+1. **Comfort over efficiency** — The app is opened when hungry and seeking reassurance. Every interaction should feel warm and unhurried, never clinical.
+2. **Texture over polish** — Imperfect, handmade visual qualities (subtle patterns, organic shapes, expressive icons) create the lived-in feel that makes this feel personal, not corporate.
+3. **Warmth is a palette rule** — Every color must lean warm. No pure blacks, no cool grays, no achromatic neutrals. Tint everything toward amber.
+4. **Playfulness through detail** — Small touches (distance icons, the phrasing of buttons, micro-animations) carry the personality. Don't rely on big visual statements; let the details do the work.
+5. **Mobile-first, thumb-friendly** — Primary actions must be easily reachable one-handed. Large tap targets, generous spacing, no tiny controls.
 

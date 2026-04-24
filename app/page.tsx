@@ -5,9 +5,12 @@ import { releases, parseReleaseTitle, parseReleaseDate, parseReleaseSections } f
 export default function Home() {
   return (
     <div className="space-y-8 pt-12">
-      <div className="text-center space-y-6">
+      <div className="text-center space-y-5">
+        <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card shadow-sm">
+          <span aria-hidden="true" className="text-2xl leading-none">🍜</span>
+        </div>
         <h1 className="text-3xl font-black">美食選擇器</h1>
-        <p className="text-muted-foreground">說出你的想法，我來幫你找到最適合的美食！</p>
+        <p className="text-sm font-semibold text-muted-foreground">餓了別煩惱，交給命運這一碗</p>
         <div className="flex flex-col gap-3 max-w-xs mx-auto">
             <Link href="/recommend">
             <Button size="lg" className="w-full bg-brand text-brand-foreground hover:bg-brand/90 font-bold">🍽️ 我餓了！推薦我</Button>
