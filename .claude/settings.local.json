@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm uninstall *)"
+      "Bash(npm uninstall *)",
+      "Read(//Users/leechiwei/.claude/**)",
+      "Read(//Users/leechiwei/.claude/plugins/**)",
+      "Bash(node /Users/leechiwei/Projects/food-picker/.agents/skills/impeccable/scripts/cleanup-deprecated.mjs)"
     ]
   }
 }
