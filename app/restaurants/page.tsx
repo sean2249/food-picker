@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { RestaurantCard } from '@/components/RestaurantCard'
 import { Restaurant } from '@/types'
 
@@ -30,62 +31,130 @@ export default function RestaurantsPage() {
     return true
   })
 
-  const getFilterButtonClass = (target: Tab): string => {
+  const tabClass = (target: Tab): string => {
     const active = tab === target
-
-    if (target === '已造訪') {
-      if (active) return 'bg-visited text-visited-foreground border-visited'
-      return 'border-visited text-visited-foreground hover:bg-visited/35'
+    if (active) {
+      return target === '已造訪'
+        ? 'bg-visited/60 border-visited-foreground/40 text-visited-foreground'
+        : 'bg-brand/15 border-brand/40 text-brand'
     }
-
-    if (target === '未造訪') {
-      if (active) return 'bg-muted text-foreground border-border'
-      return 'border-border text-muted-foreground hover:bg-muted'
-    }
-
-    if (active) return 'bg-brand text-brand-foreground border-brand'
-    return 'border-border text-muted-foreground hover:bg-muted'
+    return 'bg-transparent border-border/70 text-foreground/70 hover:bg-muted/50 hover:text-foreground'
   }
 
-  if (loading) return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-black">餐廳清單</h1>
-      <div className="space-y-3">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="rounded-xl border bg-card p-4 space-y-3 animate-pulse">
-            <div className="h-4 bg-muted rounded w-1/2" />
-            <div className="h-3 bg-muted rounded w-1/3" />
-            <div className="flex gap-2">
-              <div className="h-5 bg-muted rounded-full w-16" />
-              <div className="h-5 bg-muted rounded-full w-12" />
-            </div>
-          </div>
-        ))}
+  return (
+    <div className="zakka-content space-y-5 pt-4">
+      <header className="space-y-2">
+        <div className="flex items-end justify-between gap-3">
+          <h1 className="text-[2rem] leading-[1.1] tracking-tight inline-flex items-center gap-2">
+            <BookmarkDot />
+            <span>餐廳清單</span>
+          </h1>
+          <Link
+            href="/restaurants/new"
+            className="inline-flex items-center gap-1.5 rounded-full
+                       border border-border bg-card/70
+                       px-3 py-1.5 text-sm text-foreground/80
+                       hover:bg-card hover:border-foreground/20 transition-colors
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+          >
+            <PlusIcon />
+            <span>新增</span>
+          </Link>
+        </div>
+        <p className="text-sm text-foreground/65">
+          翻翻你蒐藏的小店本
+        </p>
+      </header>
+
+      {/* Filter tabs — pill row, journal-style with subtle counts */}
+      <div role="tablist" aria-label="造訪狀態" className="flex flex-wrap gap-1.5">
+        {(['全部', '未造訪', '已造訪'] as Tab[]).map(t => {
+          const count =
+            t === '全部' ? restaurants.length :
+            t === '未造訪' ? restaurants.filter(r => !r.visited).length :
+            restaurants.filter(r => r.visited).length
+          return (
+            <button
+              key={t}
+              role="tab"
+              aria-selected={tab === t}
+              onClick={() => setTab(t)}
+              className={[
+                'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm border transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-1',
+                tabClass(t),
+              ].join(' ')}
+            >
+              <span>{t}</span>
+              <span className="text-xs opacity-70 tabular-nums">{count}</span>
+            </button>
+          )
+        })}
       </div>
+
+      {/* List */}
+      {loading ? (
+        <ul className="space-y-3" aria-busy="true">
+          {[1, 2, 3].map(i => (
+            <li
+              key={i}
+              className="rounded-2xl bg-card/70 border border-border/70 p-4 space-y-3 animate-pulse"
+            >
+              <div className="h-4 bg-muted rounded w-1/2" />
+              <div className="h-3 bg-muted rounded w-1/3" />
+              <div className="flex gap-2">
+                <div className="h-5 bg-muted rounded-full w-16" />
+                <div className="h-5 bg-muted rounded-full w-12" />
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl bg-card/80 border border-dashed border-border/80
+                        px-5 py-10 text-center space-y-2">
+          <p className="text-foreground/70">{
+            restaurants.length === 0
+              ? '本子上還是空白的'
+              : '這個分類沒有店家'
+          }</p>
+          {restaurants.length === 0 && (
+            <Link
+              href="/restaurants/new"
+              className="inline-flex items-center gap-1.5 text-sm text-brand hover:underline"
+            >
+              <PlusIcon />
+              <span>記下第一家</span>
+            </Link>
+          )}
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {filtered.map(r => (
+            <li key={r.id}>
+              <RestaurantCard restaurant={r} onDelete={handleDelete} />
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
+}
 
+function BookmarkDot() {
   return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-black">餐廳清單</h1>
-      <div className="flex gap-2">
-        {(['全部', '未造訪', '已造訪'] as Tab[]).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${getFilterButtonClass(t)}`}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
-      <p className="text-sm text-muted-foreground">{filtered.length} 家餐廳</p>
-      {filtered.length === 0 && (
-        <p className="text-muted-foreground">沒有符合條件的餐廳</p>
-      )}
-      {filtered.map(r => (
-        <RestaurantCard key={r.id} restaurant={r} onDelete={handleDelete} />
-      ))}
-    </div>
+    <svg width="14" height="16" viewBox="0 0 14 16" fill="none" aria-hidden>
+      <path d="M2 1.5h10v12l-5-3-5 3v-12Z"
+            fill="oklch(0.625 0.175 45 / 0.18)"
+            stroke="oklch(0.625 0.175 45)" strokeWidth="1.2" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function PlusIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
   )
 }
