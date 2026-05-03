@@ -9,7 +9,6 @@
 ## Brand & Personality
 3. How would you describe the personality in 3 words? (Avoid "modern" or "clean" — think texture. E.g., "casual and warm and local", "sharp and efficient and no-nonsense", "nostalgic and handmade and Taiwanese")
 背景質感： 考慮在背景加入微弱的底紋（如手繪風格的食材圖示）或使用溫暖的米白色，增加生活感
-距離的部分：走路 5 分，可以配上一個小腳印、搭車可以配上公車的 Icon，讓介面更活潑
 
 
 4. Any apps or sites whose visual feel you admire — not necessarily food-related? What specifically about them?

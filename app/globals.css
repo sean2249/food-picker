@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-serif);
+  --font-sans: var(--font-zakka);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-zakka);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -42,6 +42,8 @@
   --color-card: var(--card);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
+  --color-matcha: var(--matcha);
+  --color-azuki: var(--azuki);
   --color-visited: var(--visited);
   --color-visited-foreground: var(--visited-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -54,50 +56,58 @@
 }
 
 :root {
-  /* Backgrounds - warm, never pure white */
-  --background: oklch(0.980 0.010 72);
-  --card: oklch(0.995 0.008 72);
-  --muted: oklch(0.945 0.012 70);
-  --nav-bg: oklch(0.960 0.018 70);   /* warm amber-tinted header strip */
+  /* Linen / aged-paper surfaces — never pure white */
+  --background: oklch(0.965 0.014 76);
+  --card: oklch(0.985 0.012 76);
+  --muted: oklch(0.935 0.018 72);
+  --nav-bg: oklch(0.955 0.020 72);
 
-  /* Text - warm browns, not pure black */
-  --foreground: oklch(0.180 0.025 55);
-  --muted-foreground: oklch(0.520 0.030 60);
+  /* Warm ink — closer to brewed-tea brown than black */
+  --foreground: oklch(0.215 0.030 50);
+  --muted-foreground: oklch(0.500 0.034 55);
 
-  /* Brand orange - single source of truth for #E46C0A */
-  --brand: oklch(0.580 0.165 48);
-  --brand-foreground: oklch(0.995 0 0);
+  /* Brand orange — single source of truth, anchor of warmth */
+  --brand: oklch(0.625 0.175 45);
+  --brand-foreground: oklch(0.995 0.005 76);
 
-  /* Visited state badge */
+  /* Supporting hues — used sparingly as accents in tags / icons */
+  --matcha: oklch(0.640 0.105 130);
+  --azuki: oklch(0.520 0.130 25);
+
+  /* Visited state */
   --visited: oklch(0.870 0.060 48);
   --visited-foreground: oklch(0.420 0.120 48);
 
-  /* shadcn system tokens (kept for component compat) */
-  --primary: oklch(0.580 0.165 48);
-  --primary-foreground: oklch(0.995 0 0);
-  --secondary: oklch(0.945 0.012 70);
-  --secondary-foreground: oklch(0.180 0.025 55);
-  --accent: oklch(0.945 0.012 70);
-  --accent-foreground: oklch(0.180 0.025 55);
-  --destructive: oklch(0.577 0.245 27.325);
-  --popover: oklch(0.995 0.008 72);
-  --popover-foreground: oklch(0.180 0.025 55);
+  /* shadcn system tokens — kept for component compat */
+  --primary: oklch(0.625 0.175 45);
+  --primary-foreground: oklch(0.995 0.005 76);
+  --secondary: oklch(0.935 0.018 72);
+  --secondary-foreground: oklch(0.215 0.030 50);
+  --accent: oklch(0.935 0.018 72);
+  --accent-foreground: oklch(0.215 0.030 50);
+  --destructive: oklch(0.577 0.220 25);
+  --popover: oklch(0.985 0.012 76);
+  --popover-foreground: oklch(0.215 0.030 50);
 
-  /* Borders */
-  --border: oklch(0.880 0.018 68);
-  --input: oklch(0.880 0.018 68);
-  --ring: oklch(0.580 0.165 48);
-  --radius: 0.75rem;
+  /* Borders — warm, soft, almost paper-edge */
+  --border: oklch(0.870 0.024 68);
+  --input: oklch(0.870 0.024 68);
+  --ring: oklch(0.625 0.175 45);
+  --radius: 0.875rem;
 
-  /* Sidebar (keep for compat) */
-  --sidebar: oklch(0.980 0.010 72);
-  --sidebar-foreground: oklch(0.180 0.025 55);
-  --sidebar-primary: oklch(0.580 0.165 48);
-  --sidebar-primary-foreground: oklch(0.995 0 0);
-  --sidebar-accent: oklch(0.945 0.012 70);
-  --sidebar-accent-foreground: oklch(0.180 0.025 55);
-  --sidebar-border: oklch(0.880 0.018 68);
-  --sidebar-ring: oklch(0.580 0.165 48);
+  /* Sidebar (compat) */
+  --sidebar: oklch(0.965 0.014 76);
+  --sidebar-foreground: oklch(0.215 0.030 50);
+  --sidebar-primary: oklch(0.625 0.175 45);
+  --sidebar-primary-foreground: oklch(0.995 0.005 76);
+  --sidebar-accent: oklch(0.935 0.018 72);
+  --sidebar-accent-foreground: oklch(0.215 0.030 50);
+  --sidebar-border: oklch(0.870 0.024 68);
+  --sidebar-ring: oklch(0.625 0.175 45);
+
+  /* Motion */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-pudding: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .dark {
@@ -138,16 +148,100 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
     @apply font-sans;
   }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Paper texture — fixed layer behind everything.
+   Reduced from 0.32 → 0.18 so icon density never competes with body text.
+   Larger tile size on phones thins the pattern further at narrow widths. */
+.zakka-paper::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("/zakka-background.png");
+  background-repeat: repeat;
+  background-size: 340px auto;
+  background-attachment: fixed;
+  opacity: 0.18;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: -10;
+}
+@media (max-width: 640px) {
+  .zakka-paper::before { background-size: 380px auto; opacity: 0.15; }
+}
+
+/* Subtle paper grain — adds tooth without competing with the food motifs */
+.zakka-paper::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(oklch(0.55 0.05 50 / 0.03) 1px, transparent 1px),
+    radial-gradient(oklch(0.85 0.04 60 / 0.04) 1px, transparent 1px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 1px 2px;
+  pointer-events: none;
+  z-index: -9;
+}
+
+/* Reading veil — a soft warm wash directly behind the content column.
+   Without this, food motifs sit flush against text and the eye fights the pattern.
+   With it, the column feels like a paper inset on the journal cover. */
+.zakka-content {
+  position: relative;
+  isolation: isolate;
+}
+.zakka-content::before {
+  content: "";
+  position: absolute;
+  inset: -8px -16px;
+  background: oklch(0.97 0.013 76 / 0.78);
+  border-radius: 24px;
+  z-index: -1;
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.5) inset;
+}
+@media (min-width: 720px) {
+  .zakka-content::before { inset: -12px -32px; border-radius: 28px; }
 }
 
 *:focus-visible {
   outline: 2px solid var(--brand);
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Pudding bounce — only on press, never on hover/entrance.
+   Honours the "按下後像布丁" brief from design.md without abusing elastic motion. */
+@keyframes pudding-bounce {
+  0%   { transform: scale(1)            translateY(0); }
+  20%  { transform: scale(0.94, 0.96)   translateY(2px); }
+  55%  { transform: scale(1.04, 0.97)   translateY(-1px); }
+  78%  { transform: scale(0.99, 1.02)   translateY(0); }
+  100% { transform: scale(1)            translateY(0); }
+}
+.pudding-press:active {
+  animation: pudding-bounce 360ms var(--ease-pudding);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pudding-press:active { animation: none; }
+}
+
+/* Sparkle twinkle — tiramisu hero accent. Opacity + tiny scale pulse,
+   no positional animation so SVG stroke caps stay sharp. */
+@keyframes sparkle-twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50%      { opacity: 1;    transform: scale(1.1); }
+}
+.sparkle-twinkle {
+  animation: sparkle-twinkle 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sparkle-twinkle { animation: none; opacity: 0.7; transform: none; }
 }
