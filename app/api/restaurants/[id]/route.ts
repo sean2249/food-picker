@@ -36,6 +36,15 @@ export async function PATCH(
     return NextResponse.json({ error: fetchError?.message ?? 'restaurant not found' }, { status: 404 })
   }
 
+  // Reject type changes — converting a restaurant ⇄ cafe would silently
+  // move the row between two user-facing sections.
+  if ('entity_type' in body && body.entity_type !== existing.entity_type) {
+    return NextResponse.json(
+      { error: 'entity_type cannot be changed via PATCH' },
+      { status: 400 }
+    )
+  }
+
   const {
     ai_summary: _ignoredAiSummary,
     entity_type: _ignoredEntityType,
