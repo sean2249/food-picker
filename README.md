@@ -1,21 +1,41 @@
-# 美食選擇器
+# Food Picker / 美食選擇器
 
-根據你的心情與天氣，透過 AI 推薦最適合的餐廳。
+> Personal food-recommendation web app for Taipei. Stores your favorite
+> restaurants and cafés, then asks Claude (Haiku) to recommend up to 3
+> based on MRT station and tags. Made for friends; deployed on
+> Cloudflare Workers.
+
+Live: <https://food-picker.sean22492249.workers.dev>
+
+---
+
+## 這是什麼
+
+> 餓了別煩惱，交給命運這一碗。
+
+一個給朋友圈用的個人美食推薦 App。把吃過、想吃的餐廳和咖啡廳記下來，
+站在某個捷運站前不知道要吃什麼的時候，按一下，讓 Claude 從你自己的口袋
+名單裡挑最多 3 間給你。選了哪一間也會被記錄下來。
+
+行動裝置優先設計，主要使用情境是「人站在外面、肚子餓、單手操作」。
 
 ## 功能
 
-- 心情輸入 → Claude AI 推薦餐廳
-- 餐廳清單管理（新增、編輯、刪除）
-- Telegram Bot 支援（`/hungry` 指令）
-- 推薦紀錄歷史
+- 餐廳 / 咖啡廳清單管理（新增、編輯、刪除、評分、心得）
+- 依捷運站 + AI 標籤推薦最多 3 間（Claude Haiku）
+- 從心得自動產生標籤（`POST /api/restaurants/generate-tags`）
+- 紀錄每次推薦清單與最後選了哪一間（`recommendation_logs`）
 
 ## 技術架構
 
-- **Frontend / Backend**: Next.js 16 (App Router)
-- **資料庫**: Supabase (PostgreSQL)
-- **AI**: Anthropic Claude (claude-haiku-4-5)
-- **Telegram Bot**: Telegraf + Webhook
-- **部署**: Cloudflare Workers (via @opennextjs/cloudflare)
+- **Frontend / Backend**：Next.js 16.2.4（App Router、React 19）
+- **資料庫**：Supabase（PostgreSQL）
+- **AI**：Anthropic Claude Haiku（`@anthropic-ai/sdk`）
+- **UI**：Tailwind CSS v4 + shadcn/ui
+- **部署**：Cloudflare Workers（透過 `@opennextjs/cloudflare`）
+
+> ⚠️ Build script 必須保留 `--webpack` 旗標。Next.js 16 預設使用
+> Turbopack，但 `@opennextjs/cloudflare` 不支援其 SSR chunk 格式。
 
 ## 本地開發
 
@@ -24,7 +44,7 @@ npm install
 npm run dev
 ```
 
-開啟 [http://localhost:3000](http://localhost:3000)
+開啟 <http://localhost:3000>。
 
 ### 環境變數
 
@@ -34,28 +54,14 @@ npm run dev
 cp .env.local.example .env.local
 ```
 
-| 變數 | 說明 |
+| 變數 | 用途 |
 | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 專案 URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
-| `ANTHROPIC_API_KEY` | Anthropic API key |
-| `TELEGRAM_BOT_TOKEN` | Telegram Bot token（從 @BotFather 取得） |
-| `TELEGRAM_WEBHOOK_URL` | Telegram Webhook URL（`https://<your-domain>/api/telegram`） |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 專案 URL（client + server） |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key（client，唯讀） |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key（**僅 API routes**） |
+| `ANTHROPIC_API_KEY` | Anthropic API key（**僅 API routes**） |
 
-## Telegram Bot
-
-啟動本地 Bot（長輪詢模式）：
-
-```bash
-npm run bot
-```
-
-部署後設定 Webhook：
-
-```bash
-curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<your-domain>/api/telegram"
-```
+`SUPABASE_SERVICE_ROLE_KEY` 與 `ANTHROPIC_API_KEY` 絕不能暴露到 client。
 
 ## 部署到 Cloudflare Workers
 
@@ -68,14 +74,14 @@ npm run cf:build
 npm run cf:deploy
 ```
 
-> **注意**：Next.js 16 預設使用 Turbopack，但 @opennextjs/cloudflare 不支援 Turbopack 的 SSR chunk 格式。
-> `package.json` 中的 `build` script 已加上 `--webpack` 繞過此問題。
-
-上傳 Cloudflare Secrets：
+上傳 Secrets 到 Worker：
 
 ```bash
-wrangler secret put ANTHROPIC_API_KEY
 wrangler secret put SUPABASE_SERVICE_ROLE_KEY
-wrangler secret put TELEGRAM_BOT_TOKEN
-# ... 其他變數
+wrangler secret put ANTHROPIC_API_KEY
+# NEXT_PUBLIC_* 變數寫在 wrangler.toml 即可
 ```
+
+## License
+
+MIT — 見 [`LICENSE`](./LICENSE)。
