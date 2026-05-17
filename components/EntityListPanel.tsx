@@ -5,6 +5,12 @@ import { RestaurantCard } from '@/components/RestaurantCard'
 import { SectionNav } from '@/components/SectionNav'
 import { Restaurant, EntityType } from '@/types'
 import { ENTITY_CONFIG } from '@/lib/entity-config'
+import {
+  MRT_LINES,
+  STATIONS_BY_LINE,
+  getLinesForStation,
+  type MrtLineId,
+} from '@/lib/mrt-stations'
 
 type Tab = '全部' | '未造訪' | '已造訪'
 
@@ -21,6 +27,19 @@ export function EntityListPanel({ entityType }: Props) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('全部')
+  const [lineFilter, setLineFilter] = useState<MrtLineId | 'all'>('all')
+  const [stationFilter, setStationFilter] = useState<string | 'all'>('all')
+
+  const handleLineFilterChange = (next: MrtLineId | 'all') => {
+    setLineFilter(next)
+    if (next === 'all') {
+      setStationFilter('all')
+      return
+    }
+    if (stationFilter !== 'all' && !(STATIONS_BY_LINE[next] as readonly string[]).includes(stationFilter)) {
+      setStationFilter('all')
+    }
+  }
 
   const fetchRestaurants = async () => {
     const res = await fetch(`/api/restaurants?type=${entityType}`)
@@ -37,8 +56,10 @@ export function EntityListPanel({ entityType }: Props) {
   useEffect(() => { fetchRestaurants() }, [entityType])
 
   const filtered = restaurants.filter(r => {
-    if (tab === '未造訪') return !r.visited
-    if (tab === '已造訪') return r.visited
+    if (tab === '未造訪' && r.visited) return false
+    if (tab === '已造訪' && !r.visited) return false
+    if (lineFilter !== 'all' && !getLinesForStation(r.mrt_station).includes(lineFilter)) return false
+    if (stationFilter !== 'all' && r.mrt_station !== stationFilter) return false
     return true
   })
 
@@ -108,6 +129,83 @@ export function EntityListPanel({ entityType }: Props) {
             </button>
           )
         })}
+      </div>
+
+      {/* MRT line/station filter */}
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => handleLineFilterChange('all')}
+            className={[
+              'px-2.5 py-1 rounded-full text-xs border transition-colors',
+              lineFilter === 'all'
+                ? 'bg-brand/15 border-brand/40 text-brand'
+                : 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50',
+            ].join(' ')}
+          >
+            全部線路
+          </button>
+          {MRT_LINES.map(line => {
+            const active = lineFilter === line.id
+            return (
+              <button
+                key={line.id}
+                type="button"
+                onClick={() => handleLineFilterChange(line.id)}
+                title={line.name}
+                className={[
+                  'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition-colors',
+                  active
+                    ? 'border-brand/60 text-foreground'
+                    : 'border-border/70 text-foreground/75 hover:bg-muted/50',
+                ].join(' ')}
+              >
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: line.color }}
+                  aria-hidden
+                />
+                {line.short}
+              </button>
+            )
+          })}
+        </div>
+
+        {lineFilter !== 'all' && (
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setStationFilter('all')}
+              className={[
+                'px-2.5 py-1 rounded-full text-xs border transition-colors',
+                stationFilter === 'all'
+                  ? 'bg-brand/15 border-brand/40 text-brand'
+                  : 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50',
+              ].join(' ')}
+            >
+              全部站
+            </button>
+            {STATIONS_BY_LINE[lineFilter].map(station => {
+              const active = stationFilter === station
+              return (
+                <button
+                  key={station}
+                  type="button"
+                  onClick={() => setStationFilter(station)}
+                  className={[
+                    'px-2.5 py-1 rounded-full text-xs border transition-colors',
+                    active
+                      ? 'bg-brand/15 border-brand/40 text-brand'
+                      : 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50',
+                  ].join(' ')}
+                >
+                  {station}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {loading ? (

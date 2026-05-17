@@ -2,18 +2,25 @@
 import { useState } from 'react'
 import { Restaurant, EntityType } from '@/types'
 import { ENTITY_CONFIG } from '@/lib/entity-config'
+import {
+  MRT_LINES,
+  STATIONS_BY_LINE,
+  LINES_BY_STATION,
+  isKnownStation,
+  type MrtLineId,
+} from '@/lib/mrt-stations'
 
-const PROXIMITY_LABELS: Record<number, string> = {
-  1: '走路 5 分鐘',
-  2: '走路 15 分鐘',
-  3: '走路 30 分鐘',
-  4: '搭車 15 分鐘',
-  5: '搭車快一小時',
-  6: '搭車一小時以上',
-  7: '開車才方便',
-  8: '跨縣市',
-  9: '台灣另一端',
-  10: '出國的',
+type MrtMode = 'taipei' | 'other'
+
+function initialMrtMode(station: string | null | undefined): MrtMode {
+  if (isKnownStation(station)) return 'taipei'
+  if (station) return 'other'
+  return 'taipei'
+}
+
+function initialLineSel(station: string | null | undefined): MrtLineId | '' {
+  if (station && LINES_BY_STATION[station]) return LINES_BY_STATION[station][0]
+  return ''
 }
 
 interface Props {
@@ -37,12 +44,18 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
   const config = ENTITY_CONFIG[entityType]
 
   const [name, setName] = useState(initialData?.name ?? '')
-  const [mrtStation, setMrtStation] = useState(initialData?.mrt_station ?? '')
+  const [mrtMode, setMrtMode] = useState<MrtMode>(initialMrtMode(initialData?.mrt_station))
+  const [mrtLineSel, setMrtLineSel] = useState<MrtLineId | ''>(initialLineSel(initialData?.mrt_station))
+  const [mrtStationSel, setMrtStationSel] = useState<string>(
+    isKnownStation(initialData?.mrt_station) ? (initialData!.mrt_station as string) : ''
+  )
+  const [mrtOtherText, setMrtOtherText] = useState<string>(
+    initialMrtMode(initialData?.mrt_station) === 'other' ? (initialData?.mrt_station ?? '') : ''
+  )
   const [items] = useState<string[]>(initialData?.items ?? [])
   const [visited, setVisited] = useState(initialData?.visited ?? false)
   const [rating, setRating] = useState<number | null>(initialData?.rating ?? null)
   const [review, setReview] = useState(initialData?.review ?? '')
-  const [proximity, setProximity] = useState<number>(initialData?.proximity ?? 5)
   const [tags, setTags] = useState<string[]>(initialData?.tags ?? [])
   const [tagInput, setTagInput] = useState('')
   const [generatingTags, setGeneratingTags] = useState(false)
@@ -77,22 +90,48 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
     setGeneratingTags(false)
   }
 
+  const resolvedStation =
+    mrtMode === 'taipei'
+      ? (mrtStationSel || null)
+      : (mrtOtherText.trim() || null)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
     setLoading(true)
     await onSubmit({
       name: name.trim(),
-      mrt_station: mrtStation.trim() || null,
+      mrt_station: resolvedStation,
       items,
       visited,
       rating: visited ? rating : null,
       review: review.trim() || null,
-      proximity,
       tags,
       entity_type: entityType,
     })
     setLoading(false)
+  }
+
+  const switchMode = (next: MrtMode) => {
+    if (next === mrtMode) return
+    setMrtMode(next)
+    if (next === 'taipei') {
+      setMrtOtherText('')
+    } else {
+      setMrtLineSel('')
+      setMrtStationSel('')
+    }
+  }
+
+  const handleLineChange = (next: MrtLineId | '') => {
+    setMrtLineSel(next)
+    if (!next) {
+      setMrtStationSel('')
+      return
+    }
+    if (mrtStationSel && !(STATIONS_BY_LINE[next] as readonly string[]).includes(mrtStationSel)) {
+      setMrtStationSel('')
+    }
   }
 
   return (
@@ -112,41 +151,80 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
         />
       </div>
 
-      {/* MRT */}
-      <div className="space-y-1.5">
-        <label htmlFor="r-mrt" className={fieldLabelClass}>
-          ・ 捷運站
-        </label>
-        <input
-          id="r-mrt"
-          value={mrtStation}
-          onChange={e => setMrtStation(e.target.value)}
-          placeholder="例：大安、信義安和"
-          className={inputClass}
-        />
-      </div>
-
-      {/* Distance — slider with playful label */}
-      <fieldset className="space-y-2">
-        <legend className={`${fieldLabelClass} flex items-baseline justify-between w-full`}>
-          <span>・ 距離</span>
-          <span className="text-foreground/85 text-sm">{PROXIMITY_LABELS[proximity]}</span>
-        </legend>
-        <input
-          type="range"
-          min={1}
-          max={10}
-          value={proximity}
-          onChange={e => setProximity(Number(e.target.value))}
-          className="w-full accent-brand"
-          aria-label="距離"
-          aria-valuetext={PROXIMITY_LABELS[proximity]}
-        />
-        <div className="flex justify-between text-[10px] text-foreground/45 px-0.5 select-none">
-          <span>近</span>
-          <span>遠</span>
+      {/* Location — 雙北捷運 / 其他地區 */}
+      <div className="space-y-2">
+        <span className={fieldLabelClass}>・ 地點</span>
+        <div className="flex gap-1.5" role="radiogroup" aria-label="地點類型">
+          {[
+            { val: 'taipei' as MrtMode, label: '雙北捷運' },
+            { val: 'other' as MrtMode, label: '其他地區' },
+          ].map(({ val, label }) => {
+            const active = mrtMode === val
+            return (
+              <button
+                key={val}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => switchMode(val)}
+                className={[
+                  'inline-flex items-center px-4 py-2 rounded-full text-sm border transition-colors',
+                  active
+                    ? 'bg-brand/15 border-brand/40 text-brand'
+                    : 'bg-transparent border-border/70 text-foreground/70 hover:bg-muted/50',
+                ].join(' ')}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
-      </fieldset>
+
+        {mrtMode === 'taipei' ? (
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <div className="space-y-1.5">
+              <label htmlFor="r-mrt-line" className={fieldLabelClass}>線路</label>
+              <select
+                id="r-mrt-line"
+                value={mrtLineSel}
+                onChange={e => handleLineChange(e.target.value as MrtLineId | '')}
+                className={inputClass}
+              >
+                <option value="">選擇線路</option>
+                {MRT_LINES.map(line => (
+                  <option key={line.id} value={line.id}>{line.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="r-mrt-station" className={fieldLabelClass}>站名</label>
+              <select
+                id="r-mrt-station"
+                value={mrtStationSel}
+                onChange={e => setMrtStationSel(e.target.value)}
+                disabled={!mrtLineSel}
+                className={`${inputClass} disabled:opacity-50`}
+              >
+                <option value="">{mrtLineSel ? '選擇站名' : '請先選線路'}</option>
+                {mrtLineSel && STATIONS_BY_LINE[mrtLineSel].map(station => (
+                  <option key={station} value={station}>{station}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-1.5 pt-1">
+            <label htmlFor="r-mrt-other" className={fieldLabelClass}>地點描述</label>
+            <input
+              id="r-mrt-other"
+              value={mrtOtherText}
+              onChange={e => setMrtOtherText(e.target.value)}
+              placeholder="例：高鐵新竹站 / 東京新宿"
+              className={inputClass}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Visited toggle — pill switch */}
       <div className="space-y-1.5">
