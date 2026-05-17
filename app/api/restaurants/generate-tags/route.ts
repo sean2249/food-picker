@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { ENTITY_CONFIG, normalizeEntityType } from '@/lib/entity-config'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
-  const { review, name, items } = await req.json()
+  const { review, name, items, entity_type } = await req.json()
+  const config = ENTITY_CONFIG[normalizeEntityType(entity_type)]
 
   if (!review?.trim()) {
     return NextResponse.json({ error: 'review is required' }, { status: 400 })
@@ -17,10 +19,10 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: 'user',
-          content: `根據以下餐廳資訊，生成 3-7 個簡短的繁體中文標籤（每個標籤 2-4 字）。
-只回覆 JSON 陣列，例如：["咖啡廳", "甜點", "適合約會"]
+          content: `${config.tagGenHint}
+只回覆 JSON 陣列，例如：${config.tagGenExample}
 
-餐廳：${name}
+${config.label}：${name}
 品項：${items?.join('、') ?? '未填'}
 短評：${review}`,
         },

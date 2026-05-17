@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
-import { Restaurant } from '@/types'
+import { Restaurant, EntityType } from '@/types'
+import { ENTITY_CONFIG } from '@/lib/entity-config'
 
 const PROXIMITY_LABELS: Record<number, string> = {
   1: '走路 5 分鐘',
@@ -19,6 +20,7 @@ interface Props {
   onSubmit: (data: Partial<Restaurant>) => Promise<void>
   initialData?: Restaurant
   onCancel?: () => void
+  entityType?: EntityType
 }
 
 const inputClass =
@@ -30,8 +32,9 @@ const inputClass =
 
 const fieldLabelClass = 'text-xs tracking-[0.08em] text-foreground/65'
 
-export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
+export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = 'restaurant' }: Props) {
   const isEdit = !!initialData
+  const config = ENTITY_CONFIG[entityType]
 
   const [name, setName] = useState(initialData?.name ?? '')
   const [mrtStation, setMrtStation] = useState(initialData?.mrt_station ?? '')
@@ -65,7 +68,7 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
     const res = await fetch('/api/restaurants/generate-tags', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ review, name, items }),
+      body: JSON.stringify({ review, name, items, entity_type: entityType }),
     })
     if (res.ok) {
       const data = await res.json()
@@ -87,6 +90,7 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
       review: review.trim() || null,
       proximity,
       tags,
+      entity_type: entityType,
     })
     setLoading(false)
   }
@@ -102,7 +106,7 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
           id="r-name"
           value={name}
           onChange={e => setName(e.target.value)}
-          placeholder="餐廳名稱"
+          placeholder={`${config.label}名稱`}
           required
           className={inputClass}
         />
@@ -150,7 +154,7 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
         <div className="flex gap-1.5">
           {[
             { val: false, label: '還沒去' },
-            { val: true, label: '吃過了' },
+            { val: true, label: entityType === 'cafe' ? '喝過了' : '吃過了' },
           ].map(({ val, label }) => {
             const active = visited === val
             return (
@@ -177,7 +181,9 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
       {/* Rating — only when visited. 5 stars, brushy outlined → filled */}
       {visited && (
         <div className="space-y-1.5">
-          <span className={fieldLabelClass}>・ 評分（吃過才能評）</span>
+          <span className={fieldLabelClass}>
+            ・ 評分（{entityType === 'cafe' ? '喝過' : '吃過'}才能評）
+          </span>
           <div className="flex gap-1.5" role="radiogroup" aria-label="評分 1 到 5">
             {[1, 2, 3, 4, 5].map(n => {
               const active = rating != null && rating >= n
@@ -224,7 +230,11 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
           id="r-review"
           value={review}
           onChange={e => setReview(e.target.value)}
-          placeholder="這家聽說什麼好吃？吃過的人怎麼說？你會怎麼跟別人介紹這家餐廳"
+          placeholder={
+            entityType === 'cafe'
+              ? '這家聽說咖啡如何？喝過的人怎麼說？你會怎麼跟別人介紹這家咖啡店'
+              : '這家聽說什麼好吃？吃過的人怎麼說？你會怎麼跟別人介紹這家餐廳'
+          }
           rows={4}
           className={`${inputClass} resize-y min-h-[6rem] leading-relaxed`}
         />
@@ -306,7 +316,7 @@ export function RestaurantForm({ onSubmit, initialData, onCancel }: Props) {
                      transition-[transform,box-shadow] duration-150 ease-out
                      focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
-          {loading ? '儲存中…' : isEdit ? '儲存變更' : '新增餐廳'}
+          {loading ? '儲存中…' : isEdit ? '儲存變更' : config.newTitle}
         </button>
         {onCancel && (
           <button

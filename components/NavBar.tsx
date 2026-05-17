@@ -5,14 +5,16 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useId, useRef, useState } from 'react'
 
 const navLinks = [
-  { href: '/recommend', label: '推薦給我', accent: '✦', primary: true },
-  { href: '/restaurants/new', label: '新增餐廳', accent: null, primary: false },
-  { href: '/restaurants', label: '餐廳清單', accent: null, primary: false },
+  { href: '/restaurants', label: '餐廳', accent: null, primary: false },
+  { href: '/cafes', label: '咖啡', accent: null, primary: false },
 ]
 
 function isActive(href: string, pathname: string): boolean {
-  if (href === '/restaurants') return pathname === '/restaurants'
-  return pathname.startsWith(href)
+  // /recommend belongs to the restaurant section conceptually (redirect target)
+  if (href === '/restaurants') {
+    return pathname === '/restaurants' || pathname.startsWith('/restaurants/') || pathname === '/recommend'
+  }
+  return pathname === href || pathname.startsWith(`${href}/`)
 }
 
 export function NavBar() {

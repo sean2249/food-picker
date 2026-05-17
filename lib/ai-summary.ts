@@ -1,4 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
+import type { EntityType } from '@/types'
+import { ENTITY_CONFIG, normalizeEntityType } from '@/lib/entity-config'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -7,6 +9,7 @@ interface SummaryInput {
   review?: string | null
   tags?: string[] | null
   visited?: boolean | null
+  entity_type?: EntityType | null
 }
 
 export function createSummaryParts(input: SummaryInput): string {
@@ -26,13 +29,14 @@ export async function generateRestaurantSummary(input: SummaryInput): Promise<st
     return null
   }
 
+  const entityLabel = ENTITY_CONFIG[normalizeEntityType(input.entity_type)].label
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 100,
     messages: [
       {
         role: 'user',
-        content: `根據以下資訊，用一句話描述這家餐廳的特色（繁體中文，不超過50字）：${parts}`,
+        content: `根據以下資訊，用一句話描述這家${entityLabel}的特色（繁體中文，不超過50字）：${parts}`,
       },
     ],
   })

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSummaryParts, generateRestaurantSummary } from '@/lib/ai-summary'
 
 export async function POST(req: NextRequest) {
-  const { items, review, tags, visited } = await req.json()
+  const { items, review, tags, visited, entity_type } = await req.json()
 
   const parts = createSummaryParts({
     items: items as string[] | null,
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
       review: review as string | null,
       tags: tags as string[] | null,
       visited: typeof visited === 'boolean' ? visited : null,
+      entity_type: entity_type ?? null,
     })
 
     return NextResponse.json({ ai_summary })

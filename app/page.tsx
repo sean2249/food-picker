@@ -30,35 +30,66 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Primary CTA — pudding bounce on press, never on hover */}
-        <div className="pt-2 space-y-3 max-w-xs mx-auto">
-          <Link
-            href="/recommend"
-            className="pudding-press group relative block w-full rounded-full bg-brand text-brand-foreground
-                       px-6 py-4 text-lg shadow-[0_6px_0_-1px_oklch(0.40_0.140_45)]
-                       hover:shadow-[0_5px_0_-1px_oklch(0.40_0.140_45)] hover:-translate-y-px
-                       active:translate-y-1 active:shadow-[0_2px_0_-1px_oklch(0.40_0.140_45)]
-                       transition-[transform,box-shadow] duration-150 ease-out
-                       focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
-            <span className="inline-flex items-center gap-2">
-              <SparkBowl />
-              <span>我餓了！推薦我</span>
-            </span>
-          </Link>
+        {/* Primary CTAs — food + coffee, two pudding-press buttons side by side */}
+        <div className="pt-2 space-y-3 max-w-sm mx-auto">
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              href="/restaurants/recommend"
+              className="pudding-press group relative block w-full rounded-full bg-brand text-brand-foreground
+                         px-4 py-3.5 text-base shadow-[0_6px_0_-1px_oklch(0.40_0.140_45)]
+                         hover:shadow-[0_5px_0_-1px_oklch(0.40_0.140_45)] hover:-translate-y-px
+                         active:translate-y-1 active:shadow-[0_2px_0_-1px_oklch(0.40_0.140_45)]
+                         transition-[transform,box-shadow] duration-150 ease-out
+                         focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <SparkBowl />
+                <span>推薦我吃</span>
+              </span>
+            </Link>
 
-          <Link
-            href="/restaurants/new"
-            className="block w-full rounded-full border border-border bg-card/60 backdrop-blur-[1px]
-                       px-6 py-3 text-base text-foreground
-                       hover:bg-card hover:border-foreground/20 transition-colors
-                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
-            <span className="inline-flex items-center gap-2">
-              <PlusLeaf />
-              <span>新增一間餐廳</span>
-            </span>
-          </Link>
+            <Link
+              href="/cafes/recommend"
+              className="pudding-press group relative block w-full rounded-full bg-brand text-brand-foreground
+                         px-4 py-3.5 text-base shadow-[0_6px_0_-1px_oklch(0.40_0.140_45)]
+                         hover:shadow-[0_5px_0_-1px_oklch(0.40_0.140_45)] hover:-translate-y-px
+                         active:translate-y-1 active:shadow-[0_2px_0_-1px_oklch(0.40_0.140_45)]
+                         transition-[transform,box-shadow] duration-150 ease-out
+                         focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <SparkCup />
+                <span>推薦我喝</span>
+              </span>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              href="/restaurants/new"
+              className="block w-full rounded-full border border-border bg-card/60 backdrop-blur-[1px]
+                         px-4 py-2.5 text-sm text-foreground
+                         hover:bg-card hover:border-foreground/20 transition-colors
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <PlusLeaf />
+                <span>新增餐廳</span>
+              </span>
+            </Link>
+            <Link
+              href="/cafes/new"
+              className="block w-full rounded-full border border-border bg-card/60 backdrop-blur-[1px]
+                         px-4 py-2.5 text-sm text-foreground
+                         hover:bg-card hover:border-foreground/20 transition-colors
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <PlusLeaf />
+                <span>新增咖啡店</span>
+              </span>
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -201,10 +232,10 @@ function Tiramisu() {
   )
 }
 
-// — Bowl + sparkle, used inside primary CTA —
+// — Bowl + sparkle, used inside food recommend CTA —
 function SparkBowl() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
          stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
          aria-hidden>
       <path d="M3 12h18" />
@@ -212,6 +243,20 @@ function SparkBowl() {
       <path d="M9 6c0-1 1-2 1.5-2S11 5 11 6" />
       <path d="M13 5c.5-1 1.4-1.6 2-1.4S15.6 5 15 6" />
       <path d="M19 17l.6 1.6L21 19l-1.4.6L19 21l-.6-1.4L17 19l1.4-.4Z" />
+    </svg>
+  )
+}
+
+// — Coffee cup + sparkle, used inside coffee recommend CTA —
+function SparkCup() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+         aria-hidden>
+      <path d="M5 9h11v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4Z" />
+      <path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16" />
+      <path d="M8 5c0 1 0 1.5-.5 2.2M11 5c0 1 0 1.5-.5 2.2M14 5c0 1 0 1.5-.5 2.2" />
+      <path d="M19 18l.6 1.6L21 20l-1.4.6L19 22l-.6-1.4L17 20l1.4-.4Z" />
     </svg>
   )
 }

@@ -36,8 +36,13 @@ export async function PATCH(
     return NextResponse.json({ error: fetchError?.message ?? 'restaurant not found' }, { status: 404 })
   }
 
-  const { ai_summary: _ignoredAiSummary, ...sanitizedBody } = body
+  const {
+    ai_summary: _ignoredAiSummary,
+    entity_type: _ignoredEntityType,
+    ...sanitizedBody
+  } = body
   void _ignoredAiSummary
+  void _ignoredEntityType
 
   const updates = {
     ...sanitizedBody,
@@ -73,6 +78,7 @@ export async function PATCH(
         review: nextReview,
         tags: nextTags,
         visited: nextVisited,
+        entity_type: existing.entity_type,
       })
 
       const { data: withSummary, error: summaryUpdateError } = await db

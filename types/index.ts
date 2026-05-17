@@ -1,3 +1,5 @@
+export type EntityType = 'restaurant' | 'cafe'
+
 export interface Restaurant {
   id: string
   name: string
@@ -10,6 +12,7 @@ export interface Restaurant {
   proximity: number | null    // 1-10 (1=closest, 10=farthest per new UI labeling)
   tags: string[]
   ai_summary: string | null
+  entity_type: EntityType
   created_at: string
   updated_at: string
 }
@@ -19,6 +22,7 @@ export interface RecommendRequest {
   visited_filter?: 'all' | 'visited' | 'unvisited'
   tags?: string[]
   max_proximity?: number  // exclude restaurants with proximity > this value
+  entity_type?: EntityType
 }
 
 export interface RecommendResult {
@@ -34,4 +38,5 @@ export interface RecommendResponse {
 export interface FeedbackRequest {
   chosen_restaurant_id: string
   shown_restaurant_ids: string[]
+  entity_type?: EntityType
 }
