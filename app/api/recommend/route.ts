@@ -2,15 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import { getRecommendation } from '@/lib/recommendation'
 import { RecommendRequest, Restaurant } from '@/types'
+import { normalizeEntityType } from '@/lib/entity-config'
 
 export async function POST(req: NextRequest) {
   const body: RecommendRequest = await req.json()
+  const entityType = normalizeEntityType(body.entity_type)
 
   try {
     const db = createServiceClient()
     const { data: allRestaurants, error } = await db
       .from('restaurants')
       .select('*')
+      .eq('entity_type', entityType)
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -35,7 +38,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const result = await getRecommendation(body.item, [], filtered)
+    const result = await getRecommendation(body.item, [], filtered, entityType)
     return NextResponse.json(result)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'

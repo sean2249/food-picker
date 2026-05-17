@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import { Restaurant } from '@/types'
 import { generateRestaurantSummary } from '@/lib/ai-summary'
+import { normalizeEntityType } from '@/lib/entity-config'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const type = normalizeEntityType(req.nextUrl.searchParams.get('type'))
   const db = createServiceClient()
   const { data, error } = await db
     .from('restaurants')
     .select('*')
+    .eq('entity_type', type)
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -29,6 +32,7 @@ export async function POST(req: NextRequest) {
     proximity: body.proximity ?? null,
     tags: body.tags ?? [],
     ai_summary: null,
+    entity_type: normalizeEntityType(body.entity_type),
   }
 
   if (!insert.name) {
@@ -51,6 +55,7 @@ export async function POST(req: NextRequest) {
       review: created.review,
       tags: created.tags,
       visited: created.visited,
+      entity_type: created.entity_type,
     })
 
     if (generatedSummary) {

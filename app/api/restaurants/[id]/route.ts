@@ -36,8 +36,22 @@ export async function PATCH(
     return NextResponse.json({ error: fetchError?.message ?? 'restaurant not found' }, { status: 404 })
   }
 
-  const { ai_summary: _ignoredAiSummary, ...sanitizedBody } = body
+  // Reject type changes — converting a restaurant ⇄ cafe would silently
+  // move the row between two user-facing sections.
+  if ('entity_type' in body && body.entity_type !== existing.entity_type) {
+    return NextResponse.json(
+      { error: 'entity_type cannot be changed via PATCH' },
+      { status: 400 }
+    )
+  }
+
+  const {
+    ai_summary: _ignoredAiSummary,
+    entity_type: _ignoredEntityType,
+    ...sanitizedBody
+  } = body
   void _ignoredAiSummary
+  void _ignoredEntityType
 
   const updates = {
     ...sanitizedBody,
@@ -73,6 +87,7 @@ export async function PATCH(
         review: nextReview,
         tags: nextTags,
         visited: nextVisited,
+        entity_type: existing.entity_type,
       })
 
       const { data: withSummary, error: summaryUpdateError } = await db

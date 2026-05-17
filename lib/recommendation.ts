@@ -1,14 +1,17 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase'
-import { Restaurant, RecommendResponse } from '@/types'
+import { Restaurant, RecommendResponse, EntityType } from '@/types'
+import { ENTITY_CONFIG } from '@/lib/entity-config'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function getRecommendation(
   item?: string,
   excludeIds: string[] = [],
-  preFiltered?: Restaurant[]
+  preFiltered?: Restaurant[],
+  entityType: EntityType = 'restaurant'
 ): Promise<RecommendResponse> {
+  const config = ENTITY_CONFIG[entityType]
   let restaurants: Restaurant[]
 
   if (preFiltered) {
@@ -18,17 +21,22 @@ export async function getRecommendation(
     const { data: allRestaurants, error } = await db
       .from('restaurants')
       .select('*')
+      .eq('entity_type', entityType)
       .order('created_at', { ascending: false })
 
     if (error) throw error
     if (!allRestaurants || allRestaurants.length === 0) {
-      return { results: [], reasoning: '目前還沒有任何餐廳紀錄，先去新增幾家吧！' }
+      const emptyMsg =
+        entityType === 'cafe'
+          ? '咖啡本子上還是空白的，先去新增幾家吧！'
+          : '目前還沒有任何餐廳紀錄，先去新增幾家吧！'
+      return { results: [], reasoning: emptyMsg }
     }
     restaurants = (allRestaurants as Restaurant[]).filter(r => !excludeIds.includes(r.id))
   }
 
   if (restaurants.length === 0) {
-    return { results: [], reasoning: '沒有符合條件的餐廳，試試調整篩選條件？' }
+    return { results: [], reasoning: '沒有符合條件的選項，試試調整篩選條件？' }
   }
 
   const restaurantList = restaurants
@@ -44,18 +52,21 @@ export async function getRecommendation(
     )
     .join('\n')
 
-  // Static part cached — dynamic part (item) stays uncached
+  const listTag = entityType === 'cafe' ? 'cafes' : 'restaurants'
+
+  // Static part cached — dynamic part (item) stays uncached.
+  // System prompt varies per entity type, creating one cache per type.
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 500,
     system: [
       {
         type: 'text',
-        text: '你是美食推薦助理。從餐廳清單中推薦最合適的最多三家，摘要與標籤是重要因子，以 JSON 回覆。',
+        text: config.aiSystemPrompt,
       },
       {
         type: 'text',
-        text: `<restaurants>\n${restaurantList}\n</restaurants>`,
+        text: `<${listTag}>\n${restaurantList}\n</${listTag}>`,
         cache_control: { type: 'ephemeral' },
       },
     ],
@@ -66,7 +77,7 @@ export async function getRecommendation(
 <item>${item ?? '不限'}</item>
 </request>
 
-請推薦最多三家餐廳，優先考慮相關標籤。
+${config.aiUserPromptHint}
 回覆 JSON，格式如下：
 {"indices": [<index1>, <index2>?, <index3>?], "messages": ["<推薦語1>", "<推薦語2>?", "<推薦語3>?"], "reasoning": "<整體推薦原因，1句>"}`,
       },

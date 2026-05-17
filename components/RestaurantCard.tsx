@@ -1,17 +1,22 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { Restaurant } from '@/types'
+import { Restaurant, EntityType } from '@/types'
+import { ENTITY_CONFIG } from '@/lib/entity-config'
 
 interface Props {
   restaurant: Restaurant
   onDelete?: (id: string) => void
   onChoose?: () => void
   isChosen?: boolean
+  entityType?: EntityType
 }
 
-export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Props) {
+export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen, entityType }: Props) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const type: EntityType = entityType ?? restaurant.entity_type ?? 'restaurant'
+  const config = ENTITY_CONFIG[type]
+  const editHref = `${config.basePath}/${restaurant.id}/edit`
 
   return (
     <article
@@ -97,8 +102,8 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Pro
                          transition-[transform,box-shadow] duration-150 ease-out
                          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-card"
             >
-              <BowlIcon />
-              <span>就選這家</span>
+              {type === 'cafe' ? <CupIcon /> : <BowlIcon />}
+              <span>{config.chooseCTA}</span>
             </button>
           )}
           {isChosen && (
@@ -110,7 +115,7 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen }: Pro
           )}
           {onDelete && (
             <Link
-              href={`/restaurants/${restaurant.id}/edit`}
+              href={editHref}
               className="inline-flex items-center justify-center rounded-full
                          px-3 py-2 text-sm text-foreground/75
                          hover:bg-muted hover:text-foreground transition-colors
@@ -269,6 +274,18 @@ function StarIcon() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"
          stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" aria-hidden>
       <path d="M12 4l2.4 5 5.4.6-4 3.7 1.1 5.3-4.9-2.8-4.9 2.8 1.1-5.3-4-3.7 5.4-.6Z" />
+    </svg>
+  )
+}
+
+// — Coffee cup (cafe variant of the chooser CTA icon) —
+function CupIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M5 8h12v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4Z" />
+      <path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17" />
+      <path d="M9 4c0 1 0 1.5-.5 2.2M12 4c0 1 0 1.5-.5 2.2M15 4c0 1 0 1.5-.5 2.2" />
     </svg>
   )
 }

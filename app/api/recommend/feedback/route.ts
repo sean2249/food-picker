@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import { FeedbackRequest } from '@/types'
+import { normalizeEntityType } from '@/lib/entity-config'
 
 export async function POST(req: NextRequest) {
   const body: FeedbackRequest = await req.json()
@@ -13,6 +14,7 @@ export async function POST(req: NextRequest) {
   const { error } = await db.from('recommendation_logs').insert({
     chosen_restaurant_id: body.chosen_restaurant_id,
     shown_restaurant_ids: body.shown_restaurant_ids,
+    entity_type: normalizeEntityType(body.entity_type),
   })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

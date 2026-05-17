@@ -1,4 +1,4 @@
--- Restaurants table
+-- Restaurants table (also hosts cafes — see entity_type)
 create table if not exists restaurants (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -10,9 +10,14 @@ create table if not exists restaurants (
   review text,
   proximity smallint check (proximity between 1 and 10),
   tags text[] not null default '{}',
+  ai_summary text,
+  entity_type text not null default 'restaurant'
+    check (entity_type in ('restaurant', 'cafe')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create index if not exists restaurants_entity_type_idx on restaurants(entity_type);
 
 -- Mood logs
 create table if not exists mood_logs (
@@ -52,11 +57,13 @@ select cron.schedule(
   $$delete from telegram_sessions where updated_at < now() - interval '24 hours'$$
 );
 
--- Recommendation feedback logs
+-- Recommendation feedback logs (shared across entity types — see entity_type)
 create table if not exists recommendation_logs (
   id uuid primary key default gen_random_uuid(),
   chosen_restaurant_id uuid references restaurants(id) on delete set null,
   shown_restaurant_ids uuid[] not null default '{}',
+  entity_type text not null default 'restaurant'
+    check (entity_type in ('restaurant', 'cafe')),
   created_at timestamptz not null default now()
 );
 
