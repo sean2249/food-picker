@@ -9,7 +9,6 @@ export interface Restaurant {
   visit_date: string | null
   rating: number | null       // 1-5
   review: string | null
-  proximity: number | null    // 1-10 (1=closest, 10=farthest per new UI labeling)
   tags: string[]
   ai_summary: string | null
   entity_type: EntityType
@@ -21,7 +20,8 @@ export interface RecommendRequest {
   item?: string
   visited_filter?: 'all' | 'visited' | 'unvisited'
   tags?: string[]
-  max_proximity?: number  // exclude restaurants with proximity > this value
+  mrt_line?: string       // filter to restaurants whose station belongs to this line
+  mrt_station?: string    // filter to restaurants at this exact station
   entity_type?: EntityType
 }
 

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Restaurant, EntityType } from '@/types'
 import { ENTITY_CONFIG } from '@/lib/entity-config'
+import { getLinesForStation, LINES_BY_ID } from '@/lib/mrt-stations'
 
 interface Props {
   restaurant: Restaurant
@@ -38,20 +39,27 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen, entit
               {restaurant.name}
             </h3>
             {restaurant.mrt_station && (
-              <div className="mt-1 inline-flex items-center gap-1 text-xs text-foreground/65">
+              <div className="mt-1 inline-flex items-center gap-1.5 text-xs text-foreground/65 flex-wrap">
                 <PinIcon />
+                {getLinesForStation(restaurant.mrt_station).map(id => {
+                  const line = LINES_BY_ID[id]
+                  return (
+                    <span
+                      key={id}
+                      className="inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] leading-none"
+                      style={{ backgroundColor: line.color, color: line.textColor }}
+                      title={line.name}
+                    >
+                      {line.short}
+                    </span>
+                  )
+                })}
                 <span>{restaurant.mrt_station}</span>
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0 text-brand">
-            {restaurant.proximity != null && (
-              <span className="inline-flex items-center gap-1 text-sm tabular-nums">
-                <ProximityIcon score={restaurant.proximity} />
-                <span>{restaurant.proximity}/10</span>
-              </span>
-            )}
             {restaurant.rating != null && (
               <span className="inline-flex items-center gap-1 text-sm tabular-nums">
                 <StarIcon />
@@ -180,80 +188,6 @@ function VisitedSeal() {
         </span>
       </span>
     </div>
-  )
-}
-
-// — Hand-drawn proximity icons: footprint / transit / car / rail / plane —
-function ProximityIcon({ score }: { score: number }) {
-  if (score <= 3) return <FootprintIcon />
-  if (score <= 6) return <TransitIcon />
-  if (score <= 7) return <CarIcon />
-  if (score <= 9) return <TrainIcon />
-  return <PlaneIcon />
-}
-
-function FootprintIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-label="走路距離">
-      {/* sole */}
-      <path d="M9 4c-2 0-3 2-3 4.5 0 2 1 3.5 2 4.5l1 5c.3 1.4 1.3 2 2 2s1.7-.6 2-2l1-5c1-1 2-2.5 2-4.5C16 6 15 4 13 4c-1 0-1.5.6-2 1-.5-.4-1-1-2-1Z" />
-      {/* toe dots */}
-      <circle cx="9" cy="2.8" r="0.8" fill="currentColor" stroke="none" />
-      <circle cx="11" cy="2.4" r="0.7" fill="currentColor" stroke="none" />
-      <circle cx="13" cy="2.4" r="0.7" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="2.8" r="0.8" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
-
-function TransitIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-label="搭車距離">
-      {/* bus body */}
-      <rect x="4" y="5" width="16" height="12" rx="2.5" />
-      <line x1="4" y1="11" x2="20" y2="11" />
-      <circle cx="8" cy="14.5" r="0.9" fill="currentColor" stroke="none" />
-      <circle cx="16" cy="14.5" r="0.9" fill="currentColor" stroke="none" />
-      {/* wheels */}
-      <line x1="7" y1="17" x2="7" y2="19" />
-      <line x1="17" y1="17" x2="17" y2="19" />
-    </svg>
-  )
-}
-
-function CarIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-label="開車距離">
-      <path d="M5 14l1.5-4.5C7 8.4 7.8 8 8.6 8h6.8c.8 0 1.6.4 2.1 1.5L19 14v3a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H8v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1Z" />
-      <line x1="6" y1="14" x2="18" y2="14" />
-      <circle cx="8" cy="14.5" r="0.7" fill="currentColor" stroke="none" />
-      <circle cx="16" cy="14.5" r="0.7" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
-
-function TrainIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-label="高鐵距離">
-      <path d="M3 14c0-4 3-7 9-7s9 3 9 7v1H3Z" />
-      <line x1="6" y1="11" x2="18" y2="11" />
-      <circle cx="8" cy="14" r="0.8" fill="currentColor" stroke="none" />
-      <circle cx="16" cy="14" r="0.8" fill="currentColor" stroke="none" />
-      <line x1="5" y1="18" x2="19" y2="18" />
-    </svg>
-  )
-}
-
-function PlaneIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-label="飛機距離">
-      <path d="M4 14l16-7-3 8-7 1-2 4-1.5-1L7 16l-3-2Z" />
-    </svg>
   )
 }
 

@@ -3,7 +3,7 @@
 # Food Picker — Project Context
 
 ## What This Is
-Personal food recommendation web app. User stores restaurants, and Claude (Haiku) recommends up to 3 based on proximity score and tags. User can record which they chose.
+Personal food recommendation web app. User stores restaurants, and Claude (Haiku) recommends up to 3 based on MRT line/station and tags. User can record which they chose.
 
 ## Tech Stack
 - **Next.js 16.2.4** (App Router, React 19) — see AGENTS.md for breaking changes
@@ -43,7 +43,6 @@ restaurants (
   visit_date timestamptz,
   rating smallint,       -- 1-5
   review text,
-  proximity smallint,    -- 1-10 (1=closest, 10=farthest)
   tags text[],           -- AI-generated from review
   created_at, updated_at timestamptz
 )
@@ -74,8 +73,8 @@ app/
     restaurants/[id]/route.ts      # GET / PATCH / DELETE
     restaurants/generate-tags/route.ts  # POST → Claude generates tags from review
 components/
-  RestaurantCard.tsx               # Shows name, proximity, rating, items, tags, choose/delete
-  RestaurantForm.tsx               # Create form with proximity selector + tag generation
+  RestaurantCard.tsx               # Shows name, MRT line badges, rating, items, tags, choose/delete
+  RestaurantForm.tsx               # Create form with 雙北 MRT cascading selector + tag generation
   ui/                              # shadcn components (button, card, badge, input, etc.)
 lib/
   recommendation.ts                # Core AI logic — getRecommendation(item?, excludeIds?)
@@ -91,8 +90,7 @@ supabase/
 - **API routes** use `createServiceClient()` (service role key), never the anon client
 - **Route params** must be `Promise<{ id: string }>` and awaited — Next.js 16 breaking change
 - **Recommendation engine** (`lib/recommendation.ts`): static restaurant list uses `cache_control: ephemeral` for Anthropic prompt caching
-- **Proximity is canonical**: `1 = closest`, `10 = farthest` (numeric ascending means farther)
-- **UI/logic alignment rule**: proximity labels, icons, filters, and API comments must all follow the same direction above; do not invert this mapping
+- **MRT data** (`lib/mrt-stations.ts`): static Taipei Metro 6 lines + stations; station name is canonical (a single station like 忠孝復興 may belong to multiple lines via `LINES_BY_STATION` lookup)
 - **No test framework** — use `npx tsc --noEmit` to gate correctness
 - **No mood feature** — removed; `mood_logs` table exists in DB for history but is no longer written to
 

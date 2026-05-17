@@ -8,7 +8,6 @@ create table if not exists restaurants (
   visit_date timestamptz,
   rating smallint check (rating between 1 and 5),
   review text,
-  proximity smallint check (proximity between 1 and 10),
   tags text[] not null default '{}',
   ai_summary text,
   entity_type text not null default 'restaurant'

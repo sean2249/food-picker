@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase'
 import { Restaurant, RecommendResponse, EntityType } from '@/types'
 import { ENTITY_CONFIG } from '@/lib/entity-config'
+import { getLinesForStation, LINES_BY_ID } from '@/lib/mrt-stations'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -40,16 +41,24 @@ export async function getRecommendation(
   }
 
   const restaurantList = restaurants
-    .map((r, i) =>
-      `[${i}] ${r.name}` +
-      ` | 摘要: ${r.ai_summary ?? '無'}` +
-      ` | 標籤: ${r.tags.length ? r.tags.join('、') : '無'}` +
-      ` | 評語: ${r.review ?? '無'}` +
-      ` | 品項: ${r.items.length ? r.items.join('、') : '未填'}` +
-      ` | 捷運: ${r.mrt_station ?? '未知'}` +
-      ` | 評分: ${r.rating ?? '未吃過'}` +
-      ` | ${r.visited ? '已造訪' : '未造訪'}`
-    )
+    .map((r, i) => {
+      const lines = getLinesForStation(r.mrt_station)
+      const stationLabel = r.mrt_station
+        ? (lines.length
+            ? `${lines.map(id => LINES_BY_ID[id].name).join('/')} ${r.mrt_station}`
+            : r.mrt_station)
+        : '未知'
+      return (
+        `[${i}] ${r.name}` +
+        ` | 摘要: ${r.ai_summary ?? '無'}` +
+        ` | 標籤: ${r.tags.length ? r.tags.join('、') : '無'}` +
+        ` | 評語: ${r.review ?? '無'}` +
+        ` | 品項: ${r.items.length ? r.items.join('、') : '未填'}` +
+        ` | 捷運: ${stationLabel}` +
+        ` | 評分: ${r.rating ?? '未吃過'}` +
+        ` | ${r.visited ? '已造訪' : '未造訪'}`
+      )
+    })
     .join('\n')
 
   const listTag = entityType === 'cafe' ? 'cafes' : 'restaurants'

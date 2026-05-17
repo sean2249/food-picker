@@ -4,19 +4,7 @@ import { RestaurantCard } from '@/components/RestaurantCard'
 import { SectionNav } from '@/components/SectionNav'
 import { RecommendResponse, EntityType } from '@/types'
 import { ENTITY_CONFIG } from '@/lib/entity-config'
-
-const PROXIMITY_LABELS: Record<number, string> = {
-  1: '走路 5 分鐘',
-  2: '走路 15 分鐘',
-  3: '走路 30 分鐘',
-  4: '搭車 15 分鐘',
-  5: '搭車快一小時',
-  6: '搭車一小時以上',
-  7: '開車才方便',
-  8: '跨縣市',
-  9: '台灣另一端',
-  10: '出國的',
-}
+import { MRT_LINES, STATIONS_BY_LINE, type MrtLineId } from '@/lib/mrt-stations'
 
 interface Props {
   entityType: EntityType
@@ -32,8 +20,20 @@ export function RecommendPanel({ entityType }: Props) {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [visitedFilter, setVisitedFilter] = useState<'all' | 'visited' | 'unvisited'>('all')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [maxProximity, setMaxProximity] = useState(10)
+  const [mrtLineFilter, setMrtLineFilter] = useState<MrtLineId | 'all'>('all')
+  const [mrtStationFilter, setMrtStationFilter] = useState<string | 'all'>('all')
   const [allTags, setAllTags] = useState<string[]>([])
+
+  const handleLineFilterChange = (next: MrtLineId | 'all') => {
+    setMrtLineFilter(next)
+    if (next === 'all') {
+      setMrtStationFilter('all')
+      return
+    }
+    if (mrtStationFilter !== 'all' && !(STATIONS_BY_LINE[next] as readonly string[]).includes(mrtStationFilter)) {
+      setMrtStationFilter('all')
+    }
+  }
 
   useEffect(() => {
     fetch(`/api/restaurants?type=${entityType}`)
@@ -61,7 +61,8 @@ export function RecommendPanel({ entityType }: Props) {
         item: item || undefined,
         visited_filter: visitedFilter,
         tags: selectedTags.length ? selectedTags : undefined,
-        max_proximity: maxProximity < 10 ? maxProximity : undefined,
+        mrt_line: mrtLineFilter !== 'all' ? mrtLineFilter : undefined,
+        mrt_station: mrtStationFilter !== 'all' ? mrtStationFilter : undefined,
         entity_type: entityType,
       }),
     })
@@ -88,7 +89,8 @@ export function RecommendPanel({ entityType }: Props) {
   const filterCount =
     (visitedFilter !== 'all' ? 1 : 0) +
     selectedTags.length +
-    (maxProximity < 10 ? 1 : 0)
+    (mrtLineFilter !== 'all' ? 1 : 0) +
+    (mrtStationFilter !== 'all' ? 1 : 0)
 
   const visitedLabels: Array<['all' | 'unvisited' | 'visited', string]> =
     entityType === 'cafe'
@@ -241,26 +243,91 @@ export function RecommendPanel({ entityType }: Props) {
                 </div>
               )}
 
-              {/* Distance slider */}
+              {/* MRT line filter */}
               <div className="space-y-2">
-                <p className="text-xs tracking-[0.08em] text-foreground/65 flex items-baseline justify-between">
-                  <span>・ 距離上限</span>
-                  <span className="text-foreground/85 text-sm">
-                    {maxProximity === 10 ? '不限' : PROXIMITY_LABELS[maxProximity]}
-                  </span>
-                </p>
-                <input
-                  type="range"
-                  min={1}
-                  max={10}
-                  value={maxProximity}
-                  onChange={e => setMaxProximity(Number(e.target.value))}
-                  tabIndex={filtersOpen ? 0 : -1}
-                  className="w-full accent-brand"
-                  aria-label="距離上限"
-                  aria-valuetext={maxProximity === 10 ? '不限' : PROXIMITY_LABELS[maxProximity]}
-                />
+                <p className="text-xs tracking-[0.08em] text-foreground/65">・ 捷運線路</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleLineFilterChange('all')}
+                    tabIndex={filtersOpen ? 0 : -1}
+                    className={[
+                      'px-2.5 py-1 rounded-full text-xs border transition-colors',
+                      mrtLineFilter === 'all'
+                        ? 'bg-brand/15 border-brand/40 text-brand'
+                        : 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50',
+                    ].join(' ')}
+                  >
+                    全部
+                  </button>
+                  {MRT_LINES.map(line => {
+                    const active = mrtLineFilter === line.id
+                    return (
+                      <button
+                        key={line.id}
+                        type="button"
+                        onClick={() => handleLineFilterChange(line.id)}
+                        tabIndex={filtersOpen ? 0 : -1}
+                        title={line.name}
+                        className={[
+                          'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition-colors',
+                          active
+                            ? 'border-brand/60 text-foreground'
+                            : 'border-border/70 text-foreground/75 hover:bg-muted/50',
+                        ].join(' ')}
+                      >
+                        <span
+                          className="inline-block h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: line.color }}
+                          aria-hidden
+                        />
+                        {line.short}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
+
+              {/* MRT station filter (only when a line is picked) */}
+              {mrtLineFilter !== 'all' && (
+                <div className="space-y-2">
+                  <p className="text-xs tracking-[0.08em] text-foreground/65">・ 捷運站</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setMrtStationFilter('all')}
+                      tabIndex={filtersOpen ? 0 : -1}
+                      className={[
+                        'px-2.5 py-1 rounded-full text-xs border transition-colors',
+                        mrtStationFilter === 'all'
+                          ? 'bg-brand/15 border-brand/40 text-brand'
+                          : 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50',
+                      ].join(' ')}
+                    >
+                      全部站
+                    </button>
+                    {STATIONS_BY_LINE[mrtLineFilter].map(station => {
+                      const active = mrtStationFilter === station
+                      return (
+                        <button
+                          key={station}
+                          type="button"
+                          onClick={() => setMrtStationFilter(station)}
+                          tabIndex={filtersOpen ? 0 : -1}
+                          className={[
+                            'px-2.5 py-1 rounded-full text-xs border transition-colors',
+                            active
+                              ? 'bg-brand/15 border-brand/40 text-brand'
+                              : 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50',
+                          ].join(' ')}
+                        >
+                          {station}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
