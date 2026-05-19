@@ -245,3 +245,24 @@
 @media (prefers-reduced-motion: reduce) {
   .sparkle-twinkle { animation: none; opacity: 0.7; transform: none; }
 }
+
+/* Recommendation result entrance — staggered fade + rise.
+   Used by /recommend so result cards "settle onto the table" instead of
+   snapping in. Triggered via Tailwind arbitrary value:
+     animate-[recommend-fade-in_300ms_ease-out_both]
+     animate-[recommend-fade-rise_400ms_ease-out_both] + style animationDelay */
+@keyframes recommend-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes recommend-fade-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="recommend-fade"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

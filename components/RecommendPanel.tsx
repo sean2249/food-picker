@@ -68,7 +68,6 @@ export function RecommendPanel({ entityType }: Props) {
     })
     const data = await res.json()
     setResult(data)
-    setFiltersOpen(true)
     setLoading(false)
   }
 
@@ -105,6 +104,15 @@ export function RecommendPanel({ entityType }: Props) {
           ['visited', '只推已造訪'],
         ]
 
+  // Active state hierarchy: single-select gets a strong fill so one
+  // committed choice reads as primary; multi-select stays in soft tint
+  // so the set of applied tags reads as a calm cluster.
+  const singleActive = 'bg-brand text-brand-foreground border-brand'
+  const multiActive = 'bg-brand/15 border-brand/40 text-brand'
+  const chipInactive = 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50'
+
+  const resultKey = result ? result.results.map(r => r.restaurant.id).join('-') : ''
+
   return (
     <div className="zakka-content space-y-6 pt-4">
       <SectionNav entityType={entityType} />
@@ -121,8 +129,8 @@ export function RecommendPanel({ entityType }: Props) {
       </header>
 
       {/* Search input — labeled as a journal prompt */}
-      <section className="space-y-2">
-        <label htmlFor="recommend-item" className="text-xs tracking-[0.08em] text-foreground/65">
+      <section className="space-y-3">
+        <label htmlFor="recommend-item" className="text-sm text-foreground/70">
           ・ {config.itemFieldLabel}
         </label>
         <input
@@ -138,29 +146,45 @@ export function RecommendPanel({ entityType }: Props) {
         />
       </section>
 
-      {/* Filters — collapsible, dashed border for journal feel */}
-      <section
-        className="rounded-2xl bg-card/80 border border-border/80 overflow-hidden
-                   shadow-[0_1px_2px_oklch(0.30_0.04_50_/_0.05)]"
+      {/* Primary CTA — the only visually heavy thing on the page */}
+      <button
+        type="button"
+        onClick={handleRecommend}
+        disabled={loading}
+        className="pudding-press group relative block w-full rounded-full bg-brand text-brand-foreground
+                   px-6 py-4 text-lg
+                   shadow-[0_6px_0_-1px_oklch(0.40_0.140_45)]
+                   hover:shadow-[0_5px_0_-1px_oklch(0.40_0.140_45)] hover:-translate-y-px
+                   active:translate-y-1 active:shadow-[0_2px_0_-1px_oklch(0.40_0.140_45)]
+                   disabled:opacity-60 disabled:hover:translate-y-0 disabled:active:translate-y-0
+                   transition-[transform,box-shadow] duration-150 ease-out
+                   focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
+        <span className="inline-flex items-center gap-2">
+          <DiceIcon spinning={loading} />
+          <span>{loading ? config.recommendLoading : config.recommendCTA}</span>
+        </span>
+      </button>
+
+      {/* Filters — inline toggle (no card chrome), tucked after the CTA */}
+      <section className="space-y-3">
         <button
           type="button"
           onClick={() => setFiltersOpen(prev => !prev)}
           aria-expanded={filtersOpen}
           aria-controls="filter-panel"
-          className="w-full flex items-center justify-between px-4 py-3 text-sm
-                     hover:bg-muted/40 transition-colors group
-                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-inset"
+          className="w-full flex items-center justify-between px-1 py-2 text-sm
+                     text-foreground/60 hover:text-foreground/85 transition-colors rounded
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40
+                     focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <span className="inline-flex items-center gap-2">
             <FilterIcon />
-            <span>篩選條件</span>
-            {filterCount > 0 && (
-              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5
-                               rounded-full bg-brand/15 text-brand text-[11px]">
-                {filterCount}
-              </span>
-            )}
+            <span>
+              {filterCount > 0
+                ? `已套用 ${filterCount} 項篩選`
+                : '加上篩選條件'}
+            </span>
           </span>
           <span
             aria-hidden
@@ -178,10 +202,10 @@ export function RecommendPanel({ entityType }: Props) {
                       ${filtersOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
         >
           <div className="overflow-hidden">
-            <div className="px-4 pb-4 space-y-5 border-t border-dashed border-border/70 pt-4">
-              {/* Visited filter — chip-style radios */}
-              <fieldset className="space-y-2">
-                <legend className="text-xs tracking-[0.08em] text-foreground/65">
+            <div className="pt-5 pb-5 space-y-5 border-t border-dashed border-border/60">
+              {/* Visited filter — single-select */}
+              <fieldset className="space-y-3">
+                <legend className="text-sm text-foreground/70">
                   ・ {entityType === 'cafe' ? '是否喝過' : '造訪狀態'}
                 </legend>
                 <div className="flex flex-wrap gap-1.5">
@@ -192,9 +216,7 @@ export function RecommendPanel({ entityType }: Props) {
                         key={val}
                         className={[
                           'cursor-pointer inline-flex items-center px-3 py-1.5 rounded-full text-sm border transition-colors',
-                          active
-                            ? 'bg-brand/15 border-brand/40 text-brand'
-                            : 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50',
+                          active ? singleActive : chipInactive,
                         ].join(' ')}
                       >
                         <input
@@ -213,10 +235,10 @@ export function RecommendPanel({ entityType }: Props) {
                 </div>
               </fieldset>
 
-              {/* Tag chips */}
+              {/* Tag chips — multi-select (kept in soft tint) */}
               {allTags.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs tracking-[0.08em] text-foreground/65">
+                <div className="space-y-3">
+                  <p className="text-sm text-foreground/70">
                     ・ 標籤 <span className="text-foreground/45">（不選 = 不限）</span>
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -230,9 +252,7 @@ export function RecommendPanel({ entityType }: Props) {
                           tabIndex={filtersOpen ? 0 : -1}
                           className={[
                             'px-2.5 py-1 rounded-full text-xs border transition-colors',
-                            active
-                              ? 'bg-brand/15 border-brand/40 text-brand'
-                              : 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50',
+                            active ? multiActive : chipInactive,
                           ].join(' ')}
                         >
                           {tag}
@@ -243,9 +263,10 @@ export function RecommendPanel({ entityType }: Props) {
                 </div>
               )}
 
-              {/* MRT line filter */}
-              <div className="space-y-2">
-                <p className="text-xs tracking-[0.08em] text-foreground/65">・ 捷運線路</p>
+              {/* MRT line — single-select. Line buttons keep their colored dot
+                  treatment so the line identity reads first. */}
+              <div className="space-y-3">
+                <p className="text-sm text-foreground/70">・ 捷運線路</p>
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"
@@ -253,9 +274,7 @@ export function RecommendPanel({ entityType }: Props) {
                     tabIndex={filtersOpen ? 0 : -1}
                     className={[
                       'px-2.5 py-1 rounded-full text-xs border transition-colors',
-                      mrtLineFilter === 'all'
-                        ? 'bg-brand/15 border-brand/40 text-brand'
-                        : 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50',
+                      mrtLineFilter === 'all' ? singleActive : chipInactive,
                     ].join(' ')}
                   >
                     全部
@@ -288,10 +307,10 @@ export function RecommendPanel({ entityType }: Props) {
                 </div>
               </div>
 
-              {/* MRT station filter (only when a line is picked) */}
+              {/* MRT station — single-select */}
               {mrtLineFilter !== 'all' && (
-                <div className="space-y-2">
-                  <p className="text-xs tracking-[0.08em] text-foreground/65">・ 捷運站</p>
+                <div className="space-y-3">
+                  <p className="text-sm text-foreground/70">・ 捷運站</p>
                   <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"
@@ -299,9 +318,7 @@ export function RecommendPanel({ entityType }: Props) {
                       tabIndex={filtersOpen ? 0 : -1}
                       className={[
                         'px-2.5 py-1 rounded-full text-xs border transition-colors',
-                        mrtStationFilter === 'all'
-                          ? 'bg-brand/15 border-brand/40 text-brand'
-                          : 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50',
+                        mrtStationFilter === 'all' ? singleActive : chipInactive,
                       ].join(' ')}
                     >
                       全部站
@@ -316,9 +333,7 @@ export function RecommendPanel({ entityType }: Props) {
                           tabIndex={filtersOpen ? 0 : -1}
                           className={[
                             'px-2.5 py-1 rounded-full text-xs border transition-colors',
-                            active
-                              ? 'bg-brand/15 border-brand/40 text-brand'
-                              : 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50',
+                            active ? singleActive : chipInactive,
                           ].join(' ')}
                         >
                           {station}
@@ -333,28 +348,9 @@ export function RecommendPanel({ entityType }: Props) {
         </div>
       </section>
 
-      {/* Primary CTA */}
-      <button
-        type="button"
-        onClick={handleRecommend}
-        disabled={loading}
-        className="pudding-press group relative block w-full rounded-full bg-brand text-brand-foreground
-                   px-6 py-4 text-lg
-                   shadow-[0_6px_0_-1px_oklch(0.40_0.140_45)]
-                   hover:shadow-[0_5px_0_-1px_oklch(0.40_0.140_45)] hover:-translate-y-px
-                   active:translate-y-1 active:shadow-[0_2px_0_-1px_oklch(0.40_0.140_45)]
-                   disabled:opacity-60 disabled:hover:translate-y-0 disabled:active:translate-y-0
-                   transition-[transform,box-shadow] duration-150 ease-out
-                   focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-      >
-        <span className="inline-flex items-center gap-2">
-          <DiceIcon spinning={loading} />
-          <span>{loading ? config.recommendLoading : config.recommendCTA}</span>
-        </span>
-      </button>
-
       {result && (
-        <section className="space-y-4">
+        // `key` forces a fresh mount on reroll so the entrance animation replays
+        <section key={resultKey} className="space-y-4">
           {/* Reroll button */}
           <button
             type="button"
@@ -370,9 +366,12 @@ export function RecommendPanel({ entityType }: Props) {
           </button>
 
           {result.reasoning && (
-            <div className="rounded-2xl bg-card/85 border border-dashed border-border/80
-                            px-4 py-3 text-sm text-foreground/80 leading-relaxed">
-              <div className="inline-flex items-center gap-1.5 text-xs tracking-[0.08em] text-foreground/55 mb-1.5">
+            <div
+              className="rounded-2xl bg-card/85 border border-dashed border-border/80
+                         px-4 py-3 text-sm text-foreground/80 leading-relaxed
+                         animate-[recommend-fade-in_300ms_ease-out_both]"
+            >
+              <div className="inline-flex items-center gap-1.5 text-sm text-foreground/65 mb-1.5">
                 <BookmarkDot small />
                 <span>挑選筆記</span>
               </div>
@@ -388,7 +387,11 @@ export function RecommendPanel({ entityType }: Props) {
 
           <ul className="space-y-4">
             {result.results.map(({ restaurant, message }, i) => (
-              <li key={restaurant.id} className="space-y-2">
+              <li
+                key={restaurant.id}
+                className="space-y-2 animate-[recommend-fade-rise_400ms_ease-out_both]"
+                style={{ animationDelay: `${120 + i * 120}ms` }}
+              >
                 <p className="px-2 text-sm text-foreground/75 leading-relaxed inline-flex items-start gap-2">
                   <span aria-hidden className="mt-1 h-1 w-1 rounded-full bg-brand/70 shrink-0" />
                   <span>
