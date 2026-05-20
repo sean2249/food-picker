@@ -1,7 +1,8 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { RestaurantCard } from '@/components/RestaurantCard'
 import { SectionNav } from '@/components/SectionNav'
+import { FloatingMascot, type MascotPose } from '@/components/FloatingMascot'
 import { RecommendResponse, EntityType } from '@/types'
 import { ENTITY_CONFIG } from '@/lib/entity-config'
 import { MRT_LINES, STATIONS_BY_LINE, type MrtLineId } from '@/lib/mrt-stations'
@@ -113,8 +114,57 @@ export function RecommendPanel({ entityType }: Props) {
 
   const resultKey = result ? result.results.map(r => r.restaurant.id).join('-') : ''
 
+  // Pose + bubble for the always-present floating mascot.
+  // Pose precedence: chosen > sad (empty) > loading > result > idle.
+  const pose: MascotPose =
+    chosen ? 'celebrating'
+    : loading ? 'thinking'
+    : result && result.results.length === 0 ? 'sad'
+    : result ? 'presenting'
+    : 'idle'
+
+  // Context-aware thinking messages — cycle while loading.
+  // Pre-canned in client, no LLM cost. Picked based on time of day +
+  // applied filters so it feels like the mascot read the form.
+  const [thinkingIdx, setThinkingIdx] = useState(0)
+  const thinkingMessages = useMemo(() => {
+    const hour = new Date().getHours()
+    const slot =
+      hour < 5 ? '深夜了' :
+      hour < 10 ? '早上' :
+      hour < 14 ? '中午' :
+      hour < 17 ? '下午' :
+      hour < 20 ? '傍晚' : '晚上'
+    const msgs = ['嗯⋯讓我想想⋯', `現在${slot}，挑點合適的⋯`]
+    if (mrtLineFilter !== 'all') {
+      const line = MRT_LINES.find(l => l.id === mrtLineFilter)
+      if (line) msgs.push(`找${line.short}線附近⋯`)
+    }
+    if (selectedTags.length > 0) {
+      msgs.push(`要 ${selectedTags.slice(0, 2).join('、')} 的⋯`)
+    }
+    if (item) msgs.push(`你想吃「${item.slice(0, 8)}」啊⋯`)
+    msgs.push('快好了⋯')
+    return msgs
+  }, [loading]) // recompute snapshot only at the start of each loading cycle
+
+  useEffect(() => {
+    if (!loading) return
+    setThinkingIdx(0)
+    const id = setInterval(() => {
+      setThinkingIdx(i => (i + 1) % thinkingMessages.length)
+    }, 1400)
+    return () => clearInterval(id)
+  }, [loading, thinkingMessages.length])
+
+  const mascotMessage =
+    chosen ? '好選擇！吃飽再來找我'
+    : loading ? thinkingMessages[thinkingIdx]
+    : result && result.results.length === 0 ? '找不到耶，鬆綁一下條件試試？'
+    : result?.reasoning ?? null  // null → bubble hidden in idle
+
   return (
-    <div className="zakka-content space-y-6 pt-4">
+    <div className="zakka-content space-y-6 pt-4 pb-28">
       <SectionNav entityType={entityType} />
 
       {/* Page header — handwritten section title with bookmark dot */}
@@ -365,19 +415,7 @@ export function RecommendPanel({ entityType }: Props) {
             {loading ? '推薦中…' : '調整篩選後再推薦一次'}
           </button>
 
-          {result.reasoning && (
-            <div
-              className="rounded-2xl bg-card/85 border border-dashed border-border/80
-                         px-4 py-3 text-sm text-foreground/80 leading-relaxed
-                         animate-[recommend-fade-in_300ms_ease-out_both]"
-            >
-              <div className="inline-flex items-center gap-1.5 text-sm text-foreground/65 mb-1.5">
-                <BookmarkDot small />
-                <span>挑選筆記</span>
-              </div>
-              <p>{result.reasoning}</p>
-            </div>
-          )}
+          {/* reasoning now lives in the floating mascot's typewriter bubble */}
 
           {result.results.length === 0 && (
             <p className="text-center text-foreground/60 py-6">
@@ -418,6 +456,12 @@ export function RecommendPanel({ entityType }: Props) {
           )}
         </section>
       )}
+
+      <FloatingMascot
+        pose={pose}
+        message={mascotMessage}
+        typewriter={pose === 'presenting' || pose === 'sad' || pose === 'celebrating'}
+      />
     </div>
   )
 }
