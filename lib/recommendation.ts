@@ -98,7 +98,13 @@ ${config.aiUserPromptHint}
   if (!textBlock || textBlock.type !== 'text') {
     throw new Error('No text content in recommendation response')
   }
-  const json = JSON.parse(textBlock.text.match(/\{[\s\S]*\}/)![0])
+  const match = textBlock.text.match(/\{[\s\S]*\}/)
+  if (!match) {
+    throw new Error(
+      `Recommendation response did not contain a JSON object. Got: ${textBlock.text.slice(0, 200)}`
+    )
+  }
+  const json = JSON.parse(match[0])
 
   const results = (json.indices as number[])
     .slice(0, 3)
