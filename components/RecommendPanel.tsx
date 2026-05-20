@@ -17,6 +17,10 @@ export function RecommendPanel({ entityType }: Props) {
   const [result, setResult] = useState<RecommendResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [chosen, setChosen] = useState<string | null>(null)
+  // Bumped per successful fetch so the result <section key=...> always
+  // remounts on reroll — even when the engine returns the same set of
+  // restaurants (e.g. tiny DB) — and the entrance animation replays.
+  const [resultNonce, setResultNonce] = useState(0)
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [visitedFilter, setVisitedFilter] = useState<'all' | 'visited' | 'unvisited'>('all')
@@ -69,6 +73,7 @@ export function RecommendPanel({ entityType }: Props) {
     })
     const data = await res.json()
     setResult(data)
+    setResultNonce(n => n + 1)
     setLoading(false)
   }
 
@@ -112,7 +117,6 @@ export function RecommendPanel({ entityType }: Props) {
   const multiActive = 'bg-brand/15 border-brand/40 text-brand'
   const chipInactive = 'bg-transparent border-border/70 text-foreground/75 hover:bg-muted/50'
 
-  const resultKey = result ? result.results.map(r => r.restaurant.id).join('-') : ''
 
   // Pose + bubble for the always-present floating mascot.
   // Pose precedence: chosen > sad (empty) > loading > result > idle.
@@ -400,7 +404,7 @@ export function RecommendPanel({ entityType }: Props) {
 
       {result && (
         // `key` forces a fresh mount on reroll so the entrance animation replays
-        <section key={resultKey} className="space-y-4">
+        <section key={resultNonce} className="space-y-4">
           {/* Reroll button */}
           <button
             type="button"
