@@ -67,7 +67,8 @@ export async function getRecommendation(
   // System prompt varies per entity type, creating one cache per type.
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 500,
+    max_tokens: 2048,
+    thinking: { type: 'enabled', budget_tokens: 1024 },
     system: [
       {
         type: 'text',
@@ -83,18 +84,21 @@ export async function getRecommendation(
       {
         role: 'user',
         content: `<request>
-<item>${item ?? '不限'}</item>
+<item>${item ?? '沒特別想吃什麼'}</item>
 </request>
 
 ${config.aiUserPromptHint}
-回覆 JSON，格式如下：
-{"indices": [<index1>, <index2>?, <index3>?], "messages": ["<推薦語1>", "<推薦語2>?", "<推薦語3>?"], "reasoning": "<整體推薦原因，1句>"}`,
+
+回覆 JSON：{"indices": [<idx>, ...], "messages": ["<推薦語>", ...], "reasoning": "<挑選原因>"}`,
       },
     ],
   })
 
-  const text = (response.content[0] as { type: 'text'; text: string }).text
-  const json = JSON.parse(text.match(/\{[\s\S]*\}/)![0])
+  const textBlock = response.content.find(b => b.type === 'text')
+  if (!textBlock || textBlock.type !== 'text') {
+    throw new Error('No text content in recommendation response')
+  }
+  const json = JSON.parse(textBlock.text.match(/\{[\s\S]*\}/)![0])
 
   const results = (json.indices as number[])
     .slice(0, 3)
