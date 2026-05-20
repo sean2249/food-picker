@@ -17,10 +17,6 @@ export function RecommendPanel({ entityType }: Props) {
   const [result, setResult] = useState<RecommendResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [chosen, setChosen] = useState<string | null>(null)
-  // Bumped per successful fetch so the result <section key=...> always
-  // remounts on reroll — even when the engine returns the same set of
-  // restaurants (e.g. tiny DB) — and the entrance animation replays.
-  const [resultNonce, setResultNonce] = useState(0)
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [visitedFilter, setVisitedFilter] = useState<'all' | 'visited' | 'unvisited'>('all')
@@ -73,7 +69,6 @@ export function RecommendPanel({ entityType }: Props) {
     })
     const data = await res.json()
     setResult(data)
-    setResultNonce(n => n + 1)
     setLoading(false)
   }
 
@@ -119,7 +114,9 @@ export function RecommendPanel({ entityType }: Props) {
 
 
   // Pose + bubble for the always-present floating mascot.
-  // Pose precedence: chosen > sad (empty) > loading > result > idle.
+  // Pose precedence: chosen > loading > sad (empty result) > presenting > idle.
+  // (loading wins over sad because we don't know it's empty until results
+  // actually arrive; while still fetching, the mascot is thinking, not sad.)
   const pose: MascotPose =
     chosen ? 'celebrating'
     : loading ? 'thinking'
@@ -150,7 +147,7 @@ export function RecommendPanel({ entityType }: Props) {
     if (item) msgs.push(`你想吃「${item.slice(0, 8)}」啊⋯`)
     msgs.push('快好了⋯')
     return msgs
-  }, [loading]) // recompute snapshot only at the start of each loading cycle
+  }, [mrtLineFilter, selectedTags, item])
 
   useEffect(() => {
     if (!loading) return
@@ -403,8 +400,9 @@ export function RecommendPanel({ entityType }: Props) {
       </section>
 
       {result && (
-        // `key` forces a fresh mount on reroll so the entrance animation replays
-        <section key={resultNonce} className="space-y-4">
+        // setResult(null) → setResult(data) already unmounts and remounts this
+        // section across the loading boundary, so the entrance animations replay.
+        <section className="space-y-4">
           {/* Reroll button */}
           <button
             type="button"

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { releases, parseReleaseTitle, parseReleaseDate, parseReleaseSections } from '@/lib/releases'
 
@@ -146,11 +147,12 @@ export default function Home() {
 function Tiramisu() {
   return (
     <div className="relative mx-auto" aria-hidden>
-      <img
+      <Image
         src="/mascot/hero.png"
         alt=""
-        width={240}
-        height={160}
+        width={600}
+        height={400}
+        priority
         className="mx-auto block h-auto w-[15rem] sm:w-[17rem]"
         draggable={false}
       />

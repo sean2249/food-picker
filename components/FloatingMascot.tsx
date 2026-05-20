@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 export type MascotPose = 'idle' | 'thinking' | 'presenting' | 'sad' | 'celebrating'
@@ -58,26 +59,39 @@ export function FloatingMascot({ pose, message, typewriter = false }: Props) {
     return () => clearInterval(id)
   }, [message, typewriter])
 
+  const hasBubble = !!message
   const showBubble = !!typed && !dismissed
-  const hasBubble = !!typed
-  const buttonLabel = hasBubble
-    ? (dismissed ? '顯示提示' : '收起提示')
-    : '提拉米蘇'
+  const buttonLabel = dismissed ? '顯示提拉米蘇的提示' : '收起提拉米蘇的提示'
+
+  const mascot = (
+    <Image
+      src={POSE_SRC[pose]}
+      alt=""
+      width={56}
+      height={56}
+      className={`block h-14 w-auto select-none ${POSE_ANIMATION[pose]}`}
+      draggable={false}
+      priority
+    />
+  )
 
   return (
     <div
       className="fixed right-3 bottom-3 z-30 flex items-end gap-2 pointer-events-none
                  sm:right-4 sm:bottom-4"
     >
+      {/* Visual bubble — aria-hidden because the typewriter would otherwise
+          spam live-region announcements one character at a time. The
+          accessible announcement happens in the sr-only sibling below. */}
       {showBubble && (
         <div
           key={message}
+          aria-hidden
           className="pointer-events-auto max-w-[220px] mb-2 relative
                      bg-card border border-border/80 rounded-2xl rounded-br-md
                      px-3.5 py-2 text-xs text-foreground/85 leading-relaxed
                      shadow-[0_2px_8px_-2px_oklch(0.30_0.04_50_/_0.18)]
                      animate-[recommend-fade-in_300ms_ease-out_both]"
-          aria-hidden
         >
           {typed}
           <span
@@ -87,25 +101,29 @@ export function FloatingMascot({ pose, message, typewriter = false }: Props) {
           />
         </div>
       )}
-      <button
-        type="button"
-        onClick={() => setDismissed(d => !d)}
-        aria-label={buttonLabel}
-        className="pointer-events-auto block rounded-full
-                   focus-visible:outline-none focus-visible:ring-2
-                   focus-visible:ring-brand/40 focus-visible:ring-offset-2
-                   focus-visible:ring-offset-background
-                   transition-transform active:scale-95"
-      >
-        <img
-          src={POSE_SRC[pose]}
-          alt=""
-          width={56}
-          height={56}
-          className={`block h-14 w-auto select-none ${POSE_ANIMATION[pose]}`}
-          draggable={false}
-        />
-      </button>
+
+      {/* Accessible announcement — full message, fires once per change. */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {showBubble ? message : ''}
+      </div>
+
+      {hasBubble ? (
+        <button
+          type="button"
+          onClick={() => setDismissed(d => !d)}
+          aria-label={buttonLabel}
+          className="pointer-events-auto block rounded-full
+                     focus-visible:outline-none focus-visible:ring-2
+                     focus-visible:ring-brand/40 focus-visible:ring-offset-2
+                     focus-visible:ring-offset-background
+                     transition-transform active:scale-95"
+        >
+          {mascot}
+        </button>
+      ) : (
+        // Idle with no message → decorative, not interactive.
+        <span className="pointer-events-none">{mascot}</span>
+      )}
     </div>
   )
 }
