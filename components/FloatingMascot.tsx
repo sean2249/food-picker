@@ -31,6 +31,13 @@ interface Props {
 
 export function FloatingMascot({ pose, message, typewriter = false }: Props) {
   const [typed, setTyped] = useState('')
+  // Bubble can be manually dismissed by tapping the mascot. When the state
+  // (pose) changes, dismissal resets so a new beat always announces itself.
+  const [dismissed, setDismissed] = useState(false)
+
+  useEffect(() => {
+    setDismissed(false)
+  }, [pose])
 
   useEffect(() => {
     if (!message) {
@@ -51,23 +58,28 @@ export function FloatingMascot({ pose, message, typewriter = false }: Props) {
     return () => clearInterval(id)
   }, [message, typewriter])
 
+  const showBubble = !!typed && !dismissed
+  const hasBubble = !!typed
+  const buttonLabel = hasBubble
+    ? (dismissed ? '顯示提示' : '收起提示')
+    : '提拉米蘇'
+
   return (
     <div
       className="fixed right-3 bottom-3 z-30 flex items-end gap-2 pointer-events-none
                  sm:right-4 sm:bottom-4"
-      aria-hidden
     >
-      {typed && (
+      {showBubble && (
         <div
           key={message}
-          className="pointer-events-auto max-w-[220px] mb-3 relative
+          className="pointer-events-auto max-w-[220px] mb-2 relative
                      bg-card border border-border/80 rounded-2xl rounded-br-md
                      px-3.5 py-2 text-xs text-foreground/85 leading-relaxed
                      shadow-[0_2px_8px_-2px_oklch(0.30_0.04_50_/_0.18)]
                      animate-[recommend-fade-in_300ms_ease-out_both]"
+          aria-hidden
         >
           {typed}
-          {/* Tail pointing at mascot */}
           <span
             className="absolute -bottom-1 right-3 h-2 w-2 rotate-45
                        bg-card border-r border-b border-border/80"
@@ -75,14 +87,25 @@ export function FloatingMascot({ pose, message, typewriter = false }: Props) {
           />
         </div>
       )}
-      <img
-        src={POSE_SRC[pose]}
-        alt=""
-        width={72}
-        height={72}
-        className={`block h-[72px] w-auto select-none pointer-events-auto ${POSE_ANIMATION[pose]}`}
-        draggable={false}
-      />
+      <button
+        type="button"
+        onClick={() => setDismissed(d => !d)}
+        aria-label={buttonLabel}
+        className="pointer-events-auto block rounded-full
+                   focus-visible:outline-none focus-visible:ring-2
+                   focus-visible:ring-brand/40 focus-visible:ring-offset-2
+                   focus-visible:ring-offset-background
+                   transition-transform active:scale-95"
+      >
+        <img
+          src={POSE_SRC[pose]}
+          alt=""
+          width={56}
+          height={56}
+          className={`block h-14 w-auto select-none ${POSE_ANIMATION[pose]}`}
+          draggable={false}
+        />
+      </button>
     </div>
   )
 }
