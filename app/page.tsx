@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { releases, parseReleaseTitle, parseReleaseDate, parseReleaseSections } from '@/lib/releases'
 
@@ -141,93 +142,20 @@ export default function Home() {
   )
 }
 
-// — Hero illustration: tiramisu block (cocoa-cream-coffee layers) + sparkles.
-//   Tiramisu is cold dessert, so steam → sparkles for the "fresh treat" cue. —
+// — Hero illustration: the painterly tiramisu mascot mid-wink, with its
+//   own built-in sparkles (so no SVG overlay needed). —
 function Tiramisu() {
   return (
-    <div className="relative mx-auto h-32 w-32" aria-hidden>
-      {/* Sparkles around the cake — three twinkles offset in time */}
-      <svg
-        className="absolute -inset-3 h-[152px] w-[152px]"
-        viewBox="0 0 152 152" fill="none"
-        stroke="oklch(0.625 0.175 45 / 0.85)" strokeWidth="1.6" strokeLinecap="round"
-      >
-        <g className="sparkle-twinkle" style={{ animationDelay: '0s', transformOrigin: '20px 30px' }}>
-          <line x1="20" y1="24" x2="20" y2="36" />
-          <line x1="14" y1="30" x2="26" y2="30" />
-        </g>
-        <g className="sparkle-twinkle" style={{ animationDelay: '0.9s', transformOrigin: '128px 22px' }}>
-          <line x1="128" y1="14" x2="128" y2="30" />
-          <line x1="120" y1="22" x2="136" y2="22" />
-        </g>
-        <g className="sparkle-twinkle" style={{ animationDelay: '1.7s', transformOrigin: '132px 110px' }}>
-          <line x1="132" y1="104" x2="132" y2="116" />
-          <line x1="126" y1="110" x2="138" y2="110" />
-        </g>
-      </svg>
-
-      {/* Tiramisu body — slightly tilted hand-drawn block */}
-      <svg
-        viewBox="0 0 128 128" className="absolute inset-0 h-full w-full"
-        fill="none"
-      >
-        <defs>
-          <clipPath id="tira-body">
-            <rect x="20" y="30" width="88" height="80" rx="13" ry="15" />
-          </clipPath>
-        </defs>
-
-        <g transform="rotate(-2.5 64 70)">
-          {/* Layered fills clipped to the cake silhouette */}
-          <g clipPath="url(#tira-body)">
-            {/* Cocoa dust top */}
-            <rect x="20" y="30" width="88" height="20" fill="oklch(0.36 0.07 55)" />
-            {/* Mascarpone cream */}
-            <rect x="20" y="50" width="88" height="14" fill="oklch(0.93 0.035 80)" />
-            {/* Coffee-soaked sponge */}
-            <rect x="20" y="64" width="88" height="14" fill="oklch(0.60 0.085 55)" />
-            {/* Mascarpone cream */}
-            <rect x="20" y="78" width="88" height="14" fill="oklch(0.93 0.035 80)" />
-            {/* Sponge bottom */}
-            <rect x="20" y="92" width="88" height="18" fill="oklch(0.60 0.085 55)" />
-          </g>
-
-          {/* Outline */}
-          <rect x="20" y="30" width="88" height="80" rx="13" ry="15"
-                fill="none" stroke="oklch(0.30 0.04 50)" strokeWidth="2.2" strokeLinejoin="round" />
-
-          {/* Cocoa powder dusting on top band */}
-          <circle cx="32" cy="36" r="0.9" fill="oklch(0.18 0.04 50 / 0.55)" />
-          <circle cx="44" cy="34" r="1.4" fill="oklch(0.18 0.04 50 / 0.55)" />
-          <circle cx="56" cy="38" r="0.9" fill="oklch(0.18 0.04 50 / 0.55)" />
-          <circle cx="80" cy="34" r="1.2" fill="oklch(0.18 0.04 50 / 0.55)" />
-          <circle cx="92" cy="38" r="1" fill="oklch(0.18 0.04 50 / 0.55)" />
-          <circle cx="100" cy="35" r="0.7" fill="oklch(0.18 0.04 50 / 0.55)" />
-
-          {/* Coffee bean garnish — sits on top, slight tilt */}
-          <g transform="rotate(-22 68 38)">
-            <ellipse cx="68" cy="38" rx="5" ry="3.2"
-                     fill="oklch(0.32 0.05 50)"
-                     stroke="oklch(0.20 0.04 50)" strokeWidth="0.8" />
-            <path d="M64 38 Q68 36 72 38 M64 38 Q68 40 72 38"
-                  stroke="oklch(0.18 0.04 50)" strokeWidth="0.8" fill="none" />
-          </g>
-
-          {/* Face on the lower cream layer — soft, sleepy-cute */}
-          <ellipse cx="50" cy="84" rx="3" ry="3.4" fill="oklch(0.20 0.04 50)" />
-          <ellipse cx="78" cy="84" rx="3" ry="3.4" fill="oklch(0.20 0.04 50)" />
-          {/* Eye highlights */}
-          <circle cx="51" cy="83" r="0.9" fill="oklch(0.985 0.012 76)" />
-          <circle cx="79" cy="83" r="0.9" fill="oklch(0.985 0.012 76)" />
-          {/* Cheeks on lower sponge */}
-          <ellipse cx="40" cy="98" rx="3.4" ry="2.2" fill="oklch(0.78 0.10 30 / 0.55)" />
-          <ellipse cx="88" cy="98" rx="3.4" ry="2.2" fill="oklch(0.78 0.10 30 / 0.55)" />
-          {/* Mouth — small smile */}
-          <path d="M60 96 Q64 99 68 96"
-                stroke="oklch(0.20 0.04 50)" strokeWidth="1.4"
-                strokeLinecap="round" fill="none" />
-        </g>
-      </svg>
+    <div className="relative mx-auto" aria-hidden>
+      <Image
+        src="/mascot/hero.png"
+        alt=""
+        width={600}
+        height={400}
+        priority
+        className="mx-auto block h-auto w-[15rem] sm:w-[17rem]"
+        draggable={false}
+      />
     </div>
   )
 }

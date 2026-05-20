@@ -245,3 +245,46 @@
 @media (prefers-reduced-motion: reduce) {
   .sparkle-twinkle { animation: none; opacity: 0.7; transform: none; }
 }
+
+/* Recommendation result entrance — staggered fade + rise.
+   Used by /recommend so result cards "settle onto the table" instead of
+   snapping in. Triggered via Tailwind arbitrary value:
+     animate-[recommend-fade-in_300ms_ease-out_both]
+     animate-[recommend-fade-rise_400ms_ease-out_both] + style animationDelay */
+@keyframes recommend-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes recommend-fade-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="recommend-fade"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Floating mascot wobble — used while the recommendation is thinking.
+   Idle pose breathes gently; thinking adds rotation + bigger scale swing. */
+@keyframes mascot-breathe {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50%      { transform: translateY(-2px) rotate(-1deg); }
+}
+@keyframes mascot-wobble {
+  0%, 100% { transform: translateY(0) rotate(-3deg) scale(1); }
+  25%      { transform: translateY(-2px) rotate(2deg) scale(1.03); }
+  50%      { transform: translateY(1px) rotate(-2deg) scale(0.99); }
+  75%      { transform: translateY(-1px) rotate(3deg) scale(1.02); }
+}
+@keyframes mascot-celebrate {
+  0%, 100% { transform: rotate(-6deg) scale(1); }
+  50%      { transform: rotate(6deg) scale(1.1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="mascot-"] {
+    animation: none !important;
+  }
+}
