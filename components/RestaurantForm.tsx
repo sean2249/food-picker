@@ -52,9 +52,15 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
   const [mrtOtherText, setMrtOtherText] = useState<string>(
     initialMrtMode(initialData?.mrt_station) === 'other' ? (initialData?.mrt_station ?? '') : ''
   )
-  const [items] = useState<string[]>(initialData?.items ?? [])
+  const [items, setItems] = useState<string[]>(initialData?.items ?? [])
+  const [itemInput, setItemInput] = useState('')
   const [visited, setVisited] = useState(initialData?.visited ?? false)
   const [rating, setRating] = useState<number | null>(initialData?.rating ?? null)
+  const [visitDate, setVisitDate] = useState<string>(
+    initialData?.visit_date
+      ? new Date(initialData.visit_date).toISOString().slice(0, 10)
+      : new Date().toISOString().slice(0, 10)
+  )
   const [review, setReview] = useState(initialData?.review ?? '')
   const [tags, setTags] = useState<string[]>(initialData?.tags ?? [])
   const [tagInput, setTagInput] = useState('')
@@ -73,6 +79,20 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
 
   const handleTagKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') { e.preventDefault(); addTag() }
+  }
+
+  const addItem = () => {
+    const trimmed = itemInput.trim()
+    if (trimmed && !items.includes(trimmed)) {
+      setItems(prev => [...prev, trimmed])
+      setItemInput('')
+    }
+  }
+
+  const removeItem = (item: string) => setItems(prev => prev.filter(i => i !== item))
+
+  const handleItemKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') { e.preventDefault(); addItem() }
   }
 
   const handleGenerateTags = async () => {
@@ -105,6 +125,11 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
       items,
       visited,
       rating: visited ? rating : null,
+      // Toggling visited on records the chosen date (defaults to today).
+      // Toggling off preserves the prior visit_date as historical record.
+      visit_date: visited
+        ? new Date(visitDate).toISOString()
+        : (initialData?.visit_date ?? null),
       review: review.trim() || null,
       tags,
       entity_type: entityType,
@@ -299,6 +324,35 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
         </div>
       )}
 
+      {/* Visit date — only when visited. Defaults to today, can backdate. */}
+      {visited && (
+        <div className="space-y-1.5">
+          <label htmlFor="r-visit-date" className={fieldLabelClass}>
+            ・ 造訪日期
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="r-visit-date"
+              type="date"
+              value={visitDate}
+              onChange={e => setVisitDate(e.target.value)}
+              max={new Date().toISOString().slice(0, 10)}
+              className={`${inputClass} flex-1`}
+            />
+            <button
+              type="button"
+              onClick={() => setVisitDate(new Date().toISOString().slice(0, 10))}
+              className="rounded-full border border-border bg-card/60
+                         px-4 text-sm text-foreground/85
+                         hover:bg-card hover:border-foreground/20 transition-colors
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            >
+              今天
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Review — textarea, doubles as note + short review */}
       <div className="space-y-1.5">
         <label htmlFor="r-review" className={fieldLabelClass}>
@@ -332,6 +386,54 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
             <span>{generatingTags ? '產生中…' : '幫我建議標籤'}</span>
           </button>
         )}
+      </div>
+
+      {/* Items — chip array, mirror of tags pattern below */}
+      <div className="space-y-2">
+        <span className={fieldLabelClass}>
+          ・ 招牌品項 <span className="text-foreground/45">（想吃的也可以記）</span>
+        </span>
+        {items.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {items.map(itm => (
+              <span
+                key={itm}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs
+                           bg-brand/12 text-brand border border-brand/30"
+              >
+                {itm}
+                <button
+                  type="button"
+                  onClick={() => removeItem(itm)}
+                  aria-label={`移除品項 ${itm}`}
+                  className="inline-flex items-center justify-center h-5 w-5 -mr-1 rounded-full
+                             hover:bg-brand/15 transition-colors"
+                >
+                  <span aria-hidden className="text-sm leading-none">×</span>
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <input
+            value={itemInput}
+            onChange={e => setItemInput(e.target.value)}
+            onKeyDown={handleItemKeyDown}
+            placeholder={entityType === 'cafe' ? '想喝的品項（Enter）' : '招牌品項 / 想吃的（Enter）'}
+            className={`${inputClass} flex-1`}
+          />
+          <button
+            type="button"
+            onClick={addItem}
+            className="rounded-full border border-border bg-card/60
+                       px-4 text-sm text-foreground/85
+                       hover:bg-card hover:border-foreground/20 transition-colors
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+          >
+            新增
+          </button>
+        </div>
       </div>
 
       {/* Tags */}

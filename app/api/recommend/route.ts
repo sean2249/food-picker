@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       filtered = filtered.filter(r => r.mrt_station === body.mrt_station)
     }
 
-    const result = await getRecommendation(body.item, [], filtered, entityType)
+    const result = await getRecommendation(body.item, body.exclude_ids ?? [], filtered, entityType)
     return NextResponse.json(result)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
