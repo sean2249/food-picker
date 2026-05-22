@@ -23,6 +23,22 @@ function initialLineSel(station: string | null | undefined): MrtLineId | '' {
   return ''
 }
 
+// Local-calendar helpers — avoid UTC slicing which can drift visit_date by a day
+// depending on the user's timezone offset.
+function toLocalDateString(d: Date): string {
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+function localDateInputToISO(dateStr: string): string {
+  // dateStr is "YYYY-MM-DD" from <input type="date">. Anchor at local midnight
+  // so DB round-trips to the same calendar day in the user's timezone.
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d).toISOString()
+}
+
 interface Props {
   onSubmit: (data: Partial<Restaurant>) => Promise<void>
   initialData?: Restaurant
@@ -58,8 +74,8 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
   const [rating, setRating] = useState<number | null>(initialData?.rating ?? null)
   const [visitDate, setVisitDate] = useState<string>(
     initialData?.visit_date
-      ? new Date(initialData.visit_date).toISOString().slice(0, 10)
-      : new Date().toISOString().slice(0, 10)
+      ? toLocalDateString(new Date(initialData.visit_date))
+      : toLocalDateString(new Date())
   )
   const [review, setReview] = useState(initialData?.review ?? '')
   const [tags, setTags] = useState<string[]>(initialData?.tags ?? [])
@@ -128,7 +144,7 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
       // Toggling visited on records the chosen date (defaults to today).
       // Toggling off preserves the prior visit_date as historical record.
       visit_date: visited
-        ? new Date(visitDate).toISOString()
+        ? localDateInputToISO(visitDate)
         : (initialData?.visit_date ?? null),
       review: review.trim() || null,
       tags,
@@ -336,12 +352,12 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
               type="date"
               value={visitDate}
               onChange={e => setVisitDate(e.target.value)}
-              max={new Date().toISOString().slice(0, 10)}
+              max={toLocalDateString(new Date())}
               className={`${inputClass} flex-1`}
             />
             <button
               type="button"
-              onClick={() => setVisitDate(new Date().toISOString().slice(0, 10))}
+              onClick={() => setVisitDate(toLocalDateString(new Date()))}
               className="rounded-full border border-border bg-card/60
                          px-4 text-sm text-foreground/85
                          hover:bg-card hover:border-foreground/20 transition-colors
