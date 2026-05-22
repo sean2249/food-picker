@@ -45,7 +45,7 @@ There is no test framework. `npx tsc --noEmit` is the only automated correctness
 | `SUPABASE_SERVICE_ROLE_KEY` | **API routes only**, via `createServiceClient()` |
 | `ANTHROPIC_API_KEY` | API routes only |
 
-`SUPABASE_SERVICE_ROLE_KEY` and `ANTHROPIC_API_KEY` must never reach the client. Cloudflare secrets are set via `wrangler secret put`; `NEXT_PUBLIC_*` lives in `wrangler.toml`. `.env.local.example` also lists `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_URL` but no Telegram routes currently exist in the codebase — treat those as dormant.
+`SUPABASE_SERVICE_ROLE_KEY` and `ANTHROPIC_API_KEY` must never reach the client. Local dev reads from `.env.local`; production deploys via `.github/workflows/deploy.yml` inject all four into the build environment from GitHub Actions secrets (`NEXT_PUBLIC_*` get inlined into the bundle by Next.js at build time, so they don't need a `[vars]` block in `wrangler.toml`). `.env.local.example` also lists `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_URL` but no Telegram routes currently exist in the codebase — treat those as dormant.
 
 ## Architecture — things that need >1 file to understand
 

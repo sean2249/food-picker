@@ -65,8 +65,12 @@ cp .env.local.example .env.local
 
 ## 部署到 Cloudflare Workers
 
+正式部署走 GitHub Actions（`.github/workflows/deploy.yml`）—— push 到 `main` 會自動 build + deploy，所有環境變數從 repo secrets 注入到 build：`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`、`SUPABASE_SERVICE_ROLE_KEY`、`ANTHROPIC_API_KEY`，外加 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`。
+
+要本機部署的話：
+
 ```bash
-# 一鍵 build + deploy
+# 一鍵 build + deploy（讀本地 .env.local）
 bash scripts/deploy.sh
 
 # 或分開執行
@@ -74,13 +78,7 @@ npm run cf:build
 npm run cf:deploy
 ```
 
-上傳 Secrets 到 Worker：
-
-```bash
-wrangler secret put SUPABASE_SERVICE_ROLE_KEY
-wrangler secret put ANTHROPIC_API_KEY
-# NEXT_PUBLIC_* 變數寫在 wrangler.toml 即可
-```
+`NEXT_PUBLIC_*` 由 Next.js 在 build 時就 inline 進 bundle，不需要在 `wrangler.toml` 設定。server-only secrets 也是 build-time 注入，所以不必走 `wrangler secret put`。
 
 ## License
 
