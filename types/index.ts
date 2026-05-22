@@ -23,6 +23,7 @@ export interface RecommendRequest {
   mrt_line?: string       // filter to restaurants whose station belongs to this line
   mrt_station?: string    // filter to restaurants at this exact station
   entity_type?: EntityType
+  exclude_ids?: string[]  // restaurants to exclude (used by reroll to avoid repeats)
 }
 
 export interface RecommendResult {

@@ -52,6 +52,8 @@ export function RecommendPanel({ entityType }: Props) {
   }
 
   const handleRecommend = async () => {
+    // Capture previous round's IDs before clearing so reroll won't repeat them.
+    const excludeIds = result?.results.map(r => r.restaurant.id) ?? []
     setLoading(true)
     setResult(null)
     setChosen(null)
@@ -65,6 +67,7 @@ export function RecommendPanel({ entityType }: Props) {
         mrt_line: mrtLineFilter !== 'all' ? mrtLineFilter : undefined,
         mrt_station: mrtStationFilter !== 'all' ? mrtStationFilter : undefined,
         entity_type: entityType,
+        exclude_ids: excludeIds.length ? excludeIds : undefined,
       }),
     })
     const data = await res.json()
