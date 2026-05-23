@@ -47,6 +47,17 @@ There is no test framework. `npx tsc --noEmit` is the only automated correctness
 
 `SUPABASE_SERVICE_ROLE_KEY` and `ANTHROPIC_API_KEY` must never reach the client. Local dev reads from `.env.local`; production deploys via `.github/workflows/deploy.yml` inject all four into the build environment from GitHub Actions secrets (`NEXT_PUBLIC_*` get inlined into the bundle by Next.js at build time, so they don't need a `[vars]` block in `wrangler.toml`). `.env.local.example` also lists `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_URL` but no Telegram routes currently exist in the codebase — treat those as dormant.
 
+### Cloudflare deploy prerequisites
+
+The deploy workflow needs two more GitHub Actions secrets:
+
+| Secret | Notes |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Create via the dashboard preset **"Edit Cloudflare Workers"** — not a hand-rolled token with only `Workers Scripts: Edit`. The asset-upload-session endpoint requires the full preset's scopes (Workers Scripts/Routes/KV/R2, Account Settings, User Details, Memberships). |
+| `CLOUDFLARE_ACCOUNT_ID` | The account that owns the `food-picker` Worker. |
+
+If deploy fails with `entitlements.not_available [code: 10007]` on the `assets-upload-session` call, the cause is one of: token missing scopes, account hasn't accepted the current Workers TOS in the dashboard, or wrong `CLOUDFLARE_ACCOUNT_ID`. The "Cloudflare auth diagnostics" step in `deploy.yml` runs `wrangler whoami` before deploy — check its output (token permissions and account list) in the failed Actions run first.
+
 ## Architecture — things that need >1 file to understand
 
 ### Single table, two entities (`entity_type` discriminator)
