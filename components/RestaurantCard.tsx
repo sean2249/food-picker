@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Restaurant, EntityType } from '@/types'
 import { ENTITY_CONFIG } from '@/lib/entity-config'
 import { getLinesForStation, LINES_BY_ID } from '@/lib/mrt-stations'
+import { GoogleMapsLink } from '@/components/GoogleMapsLink'
 
 interface Props {
   restaurant: Restaurant
@@ -35,8 +36,11 @@ export function RestaurantCard({ restaurant, onDelete, onChoose, isChosen, entit
       <div className={['px-5 pt-4 pb-3', restaurant.visited ? 'pl-[3.75rem]' : ''].join(' ')}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-base text-foreground tracking-tight">
-              {restaurant.name}
+            <h3 className="text-base text-foreground tracking-tight inline-flex items-center gap-1.5 flex-wrap">
+              <span className="break-words">{restaurant.name}</span>
+              {restaurant.google_maps_url && (
+                <GoogleMapsLink url={restaurant.google_maps_url} address={restaurant.address} />
+              )}
             </h3>
             {restaurant.mrt_station && (
               <div className="mt-1 inline-flex items-center gap-1.5 text-xs text-foreground/65 flex-wrap">

@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase'
 import { getRecommendation } from '@/lib/recommendation'
 import { RecommendRequest, Restaurant } from '@/types'
 import { normalizeEntityType } from '@/lib/entity-config'
-import { getLinesForStation, MrtLineId } from '@/lib/mrt-stations'
+import { getLinesForStation, isKnownStation, MrtLineId } from '@/lib/mrt-stations'
 
 export async function POST(req: NextRequest) {
   const body: RecommendRequest = await req.json()
@@ -31,6 +31,11 @@ export async function POST(req: NextRequest) {
       filtered = filtered.filter(r =>
         body.tags!.some(t => r.tags.includes(t))
       )
+    }
+
+    if (body.location_mode === 'other') {
+      // 其他地區 = has a location label that isn't a known Taipei MRT station.
+      filtered = filtered.filter(r => r.mrt_station != null && !isKnownStation(r.mrt_station))
     }
 
     if (body.mrt_line) {

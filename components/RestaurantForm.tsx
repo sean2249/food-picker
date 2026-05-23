@@ -9,6 +9,8 @@ import {
   isKnownStation,
   type MrtLineId,
 } from '@/lib/mrt-stations'
+import { AddressAutocomplete } from '@/components/AddressAutocomplete'
+import type { PlaceDetail } from '@/lib/places'
 
 type MrtMode = 'taipei' | 'other'
 
@@ -68,6 +70,13 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
   const [mrtOtherText, setMrtOtherText] = useState<string>(
     initialMrtMode(initialData?.mrt_station) === 'other' ? (initialData?.mrt_station ?? '') : ''
   )
+  // Google Places metadata — filled by AddressAutocomplete, pure metadata
+  // (does not gate save; mrt_station is still the location of record).
+  const [address, setAddress] = useState<string | null>(initialData?.address ?? null)
+  const [googlePlaceId, setGooglePlaceId] = useState<string | null>(initialData?.google_place_id ?? null)
+  const [googleMapsUrl, setGoogleMapsUrl] = useState<string | null>(initialData?.google_maps_url ?? null)
+  const [latitude, setLatitude] = useState<number | null>(initialData?.latitude ?? null)
+  const [longitude, setLongitude] = useState<number | null>(initialData?.longitude ?? null)
   const [items, setItems] = useState<string[]>(initialData?.items ?? [])
   const [itemInput, setItemInput] = useState('')
   const [visited, setVisited] = useState(initialData?.visited ?? false)
@@ -131,6 +140,31 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
       ? (mrtStationSel || null)
       : (mrtOtherText.trim() || null)
 
+  const linkedPlace = googlePlaceId ? { name, address } : null
+
+  const applyPlaceDetail = (detail: PlaceDetail) => {
+    setAddress(detail.address)
+    setGooglePlaceId(detail.placeId)
+    setGoogleMapsUrl(detail.googleMapsUrl)
+    setLatitude(detail.lat)
+    setLongitude(detail.lng)
+    if (!name.trim() && detail.name) setName(detail.name)
+    // In 其他地區 mode, seed the editable location label from the derived
+    // locality — but don't clobber a label the user already typed.
+    if (mrtMode === 'other' && detail.locality && !mrtOtherText.trim()) {
+      setMrtOtherText(detail.locality)
+    }
+  }
+
+  const clearPlace = () => {
+    setAddress(null)
+    setGooglePlaceId(null)
+    setGoogleMapsUrl(null)
+    setLatitude(null)
+    setLongitude(null)
+    // Keep name + mrtOtherText — the location label may still be wanted.
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
@@ -149,6 +183,11 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
       review: review.trim() || null,
       tags,
       entity_type: entityType,
+      address,
+      google_place_id: googlePlaceId,
+      google_maps_url: googleMapsUrl,
+      latitude,
+      longitude,
     })
     setLoading(false)
   }
@@ -222,47 +261,77 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
         </div>
 
         {mrtMode === 'taipei' ? (
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <div className="space-y-1.5">
-              <label htmlFor="r-mrt-line" className={fieldLabelClass}>線路</label>
-              <select
-                id="r-mrt-line"
-                value={mrtLineSel}
-                onChange={e => handleLineChange(e.target.value as MrtLineId | '')}
-                className={inputClass}
-              >
-                <option value="">選擇線路</option>
-                {MRT_LINES.map(line => (
-                  <option key={line.id} value={line.id}>{line.name}</option>
-                ))}
-              </select>
+          <>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <div className="space-y-1.5">
+                <label htmlFor="r-mrt-line" className={fieldLabelClass}>線路</label>
+                <select
+                  id="r-mrt-line"
+                  value={mrtLineSel}
+                  onChange={e => handleLineChange(e.target.value as MrtLineId | '')}
+                  className={inputClass}
+                >
+                  <option value="">選擇線路</option>
+                  {MRT_LINES.map(line => (
+                    <option key={line.id} value={line.id}>{line.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="r-mrt-station" className={fieldLabelClass}>站名</label>
+                <select
+                  id="r-mrt-station"
+                  value={mrtStationSel}
+                  onChange={e => setMrtStationSel(e.target.value)}
+                  disabled={!mrtLineSel}
+                  className={`${inputClass} disabled:opacity-50`}
+                >
+                  <option value="">{mrtLineSel ? '選擇站名' : '請先選線路'}</option>
+                  {mrtLineSel && STATIONS_BY_LINE[mrtLineSel].map(station => (
+                    <option key={station} value={station}>{station}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <label htmlFor="r-mrt-station" className={fieldLabelClass}>站名</label>
-              <select
-                id="r-mrt-station"
-                value={mrtStationSel}
-                onChange={e => setMrtStationSel(e.target.value)}
-                disabled={!mrtLineSel}
-                className={`${inputClass} disabled:opacity-50`}
-              >
-                <option value="">{mrtLineSel ? '選擇站名' : '請先選線路'}</option>
-                {mrtLineSel && STATIONS_BY_LINE[mrtLineSel].map(station => (
-                  <option key={station} value={station}>{station}</option>
-                ))}
-              </select>
+            <div className="space-y-1.5 pt-2">
+              <span className={fieldLabelClass}>
+                連結 Google Maps <span className="text-foreground/45">（可選）</span>
+              </span>
+              <AddressAutocomplete
+                value={linkedPlace}
+                onSelect={applyPlaceDetail}
+                onClear={clearPlace}
+                initialQuery={name.trim() || undefined}
+                placeholder="搜尋店名連結地圖"
+              />
             </div>
-          </div>
+          </>
         ) : (
-          <div className="space-y-1.5 pt-1">
-            <label htmlFor="r-mrt-other" className={fieldLabelClass}>地點描述</label>
-            <input
-              id="r-mrt-other"
-              value={mrtOtherText}
-              onChange={e => setMrtOtherText(e.target.value)}
-              placeholder="例：高鐵新竹站 / 東京新宿"
-              className={inputClass}
-            />
+          <div className="space-y-3 pt-1">
+            <div className="space-y-1.5">
+              <span className={fieldLabelClass}>
+                地點搜尋 <span className="text-foreground/45">（Google Maps）</span>
+              </span>
+              <AddressAutocomplete
+                value={linkedPlace}
+                onSelect={applyPlaceDetail}
+                onClear={clearPlace}
+                initialQuery={name.trim() || undefined}
+                placeholder="搜尋店名或地點"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="r-mrt-other" className={fieldLabelClass}>
+                地點標籤 <span className="text-foreground/45">（顯示與篩選用）</span>
+              </label>
+              <input
+                id="r-mrt-other"
+                value={mrtOtherText}
+                onChange={e => setMrtOtherText(e.target.value)}
+                placeholder="例：新竹市 / 東京新宿"
+                className={inputClass}
+              />
+            </div>
           </div>
         )}
       </div>

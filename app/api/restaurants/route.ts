@@ -32,6 +32,11 @@ export async function POST(req: NextRequest) {
     tags: body.tags ?? [],
     ai_summary: null,
     entity_type: normalizeEntityType(body.entity_type),
+    address: body.address ?? null,
+    google_place_id: body.google_place_id ?? null,
+    google_maps_url: body.google_maps_url ?? null,
+    latitude: body.latitude ?? null,
+    longitude: body.longitude ?? null,
   }
 
   if (!insert.name) {

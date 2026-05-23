@@ -44,8 +44,9 @@ There is no test framework. `npx tsc --noEmit` is the only automated correctness
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | client (read-only) |
 | `SUPABASE_SERVICE_ROLE_KEY` | **API routes only**, via `createServiceClient()` |
 | `ANTHROPIC_API_KEY` | API routes only |
+| `GOOGLE_MAPS_API_KEY` | **API routes only** — Google Places API (New), proxied via `/api/places/*` |
 
-`SUPABASE_SERVICE_ROLE_KEY` and `ANTHROPIC_API_KEY` must never reach the client. Local dev reads from `.env.local`; production deploys via `.github/workflows/deploy.yml` inject all four into the build environment from GitHub Actions secrets (`NEXT_PUBLIC_*` get inlined into the bundle by Next.js at build time, so they don't need a `[vars]` block in `wrangler.toml`). `.env.local.example` also lists `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_URL` but no Telegram routes currently exist in the codebase — treat those as dormant.
+`SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, and `GOOGLE_MAPS_API_KEY` must never reach the client — the Places key is used only server-side in `lib/places.ts`, and the browser hits `/api/places/{autocomplete,details}` instead. Local dev reads from `.env.local`; production deploys via `.github/workflows/deploy.yml` inject the build environment from GitHub Actions secrets (`NEXT_PUBLIC_*` get inlined into the bundle by Next.js at build time, so they don't need a `[vars]` block in `wrangler.toml`). **Add `GOOGLE_MAPS_API_KEY` as a GitHub Actions secret and pass it through in `deploy.yml`**, otherwise the deployed Worker's Places routes return 503. `.env.local.example` also lists `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_URL` but no Telegram routes currently exist in the codebase — treat those as dormant.
 
 ### Cloudflare deploy prerequisites
 

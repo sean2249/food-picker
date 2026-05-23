@@ -12,6 +12,11 @@ create table if not exists restaurants (
   ai_summary text,
   entity_type text not null default 'restaurant'
     check (entity_type in ('restaurant', 'cafe')),
+  address text,
+  google_place_id text,
+  google_maps_url text,
+  latitude double precision,
+  longitude double precision,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
