@@ -1,6 +1,5 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { releases, parseReleaseTitle, parseReleaseDate, parseReleaseSections } from '@/lib/releases'
 
 export default function Home() {
   const today = new Date()
@@ -93,51 +92,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Updates — journal entry block; bumped to 90% card opacity for
-          comfortable reading over the patterned bg */}
-      <section aria-labelledby="updates-heading" className="rounded-2xl bg-card/90 border border-border/80 overflow-hidden shadow-[0_1px_2px_oklch(0.30_0.04_50_/_0.06)]">
-        <header className="flex items-center justify-between px-5 py-3 border-b border-dashed border-border">
-          <h2 id="updates-heading" className="text-sm text-foreground inline-flex items-center gap-2">
-            <BookmarkDot />
-            <span>更新記錄</span>
-          </h2>
-          <span className="text-[11px] text-muted-foreground tracking-wider">
-            最近 {releases.length} 篇
-          </span>
-        </header>
-        <ul>
-          {releases.map((release, i) => (
-            <li key={release.filename} className="border-b border-dashed border-border/70 last:border-0">
-              <details open={i === 0} className="group">
-                <summary className="px-5 py-3 cursor-pointer list-none flex items-center justify-between gap-3
-                                    hover:bg-muted/50 transition-colors">
-                  <span className="flex items-center gap-3 min-w-0">
-                    <span className="text-brand text-base leading-none transition-transform group-open:rotate-90">›</span>
-                    <span className="truncate">{parseReleaseTitle(release.content)}</span>
-                  </span>
-                  {parseReleaseDate(release.content) && (
-                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                      {parseReleaseDate(release.content)}
-                    </span>
-                  )}
-                </summary>
-                <ul className="px-5 pb-4 pt-1 space-y-1.5">
-                  {parseReleaseSections(release.content).map((section) => (
-                    <li
-                      key={section}
-                      className="text-sm text-muted-foreground flex items-start gap-2 pl-7"
-                    >
-                      <span aria-hidden className="mt-2 h-1 w-1 rounded-full bg-brand/60 shrink-0" />
-                      <span>{section}</span>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            </li>
-          ))}
-        </ul>
-      </section>
     </div>
   )
 }
@@ -201,13 +155,3 @@ function PlusLeaf() {
   )
 }
 
-// — Notebook bookmark dot, used in updates header —
-function BookmarkDot() {
-  return (
-    <svg width="14" height="16" viewBox="0 0 14 16" fill="none" aria-hidden>
-      <path d="M2 1.5h10v12l-5-3-5 3v-12Z"
-            fill="oklch(0.625 0.175 45 / 0.18)"
-            stroke="oklch(0.625 0.175 45)" strokeWidth="1.2" strokeLinejoin="round" />
-    </svg>
-  )
-}
