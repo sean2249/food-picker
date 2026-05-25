@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
 import { NavBar } from '@/components/NavBar'
+import { AdminUnlockDialog } from '@/components/AdminUnlockDialog'
 
 const huninn = localFont({
   src: '../public/fonts/jf-openhuninn-2.1.ttf',
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="max-w-2xl mx-auto px-4 py-8">
           {children}
         </main>
+        <AdminUnlockDialog />
       </body>
     </html>
   )

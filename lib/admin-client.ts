@@ -10,16 +10,63 @@ export function getStoredSecret(): string | null {
 
 export function storeSecret(secret: string): void {
   window.localStorage.setItem(STORAGE_KEY, secret)
+  notifyAuth()
 }
 
 export function clearStoredSecret(): void {
   window.localStorage.removeItem(STORAGE_KEY)
+  notifyAuth()
 }
 
-function askForSecret(): string | null {
-  if (typeof window === 'undefined') return null
-  const value = window.prompt('請輸入管理密鑰才能新增、修改或刪除資料')?.trim()
-  return value || null
+export function isUnlocked(): boolean {
+  return getStoredSecret() !== null
+}
+
+export function logout(): void {
+  clearStoredSecret()
+}
+
+// — Reactive unlock state, so the nav lock indicator can re-render on
+//   login/logout without a Context (none exists in this codebase). —
+type AuthListener = () => void
+const authListeners = new Set<AuthListener>()
+
+export function subscribeAuth(listener: AuthListener): () => void {
+  authListeners.add(listener)
+  return () => authListeners.delete(listener)
+}
+
+function notifyAuth(): void {
+  authListeners.forEach(listener => listener())
+}
+
+// — Bridge between the plain `adminFetch` function and the React unlock
+//   dialog. The dialog registers an opener on mount; `requestSecret` hands it
+//   a resolver and awaits the verified secret. Falls back to window.prompt if
+//   the dialog isn't mounted (defensive). —
+type SecretResolver = (secret: string | null) => void
+type DialogOpener = (resolver: SecretResolver | null) => void
+
+let dialogOpener: DialogOpener | null = null
+
+export function registerAdminDialog(opener: DialogOpener | null): void {
+  dialogOpener = opener
+}
+
+function requestSecret(): Promise<string | null> {
+  if (!dialogOpener) {
+    if (typeof window === 'undefined') return Promise.resolve(null)
+    const value = window.prompt('請輸入管理密鑰才能新增、修改或刪除資料')?.trim() || null
+    if (value) storeSecret(value)
+    return Promise.resolve(value)
+  }
+  return new Promise(resolve => dialogOpener!(resolve))
+}
+
+// Opens the dialog for proactive management (nav lock): no pending action to
+// resolve — locked → ask for secret, unlocked → offer logout.
+export function openAdminDialog(): void {
+  dialogOpener?.(null)
 }
 
 interface AdminFetchInit extends RequestInit {
@@ -36,9 +83,8 @@ export async function adminFetch(
   let secret = getStoredSecret()
   let askedThisCall = false
   if (!secret && prompt) {
-    secret = askForSecret()
+    secret = await requestSecret()
     askedThisCall = true
-    if (secret) storeSecret(secret)
   }
 
   const run = (token: string | null) => {
@@ -53,11 +99,8 @@ export async function adminFetch(
   // already asked during this call, don't pop a second dialog.
   if (res.status === 401 && prompt && !askedThisCall) {
     clearStoredSecret()
-    const retry = askForSecret()
-    if (retry) {
-      storeSecret(retry)
-      res = await run(retry)
-    }
+    const retry = await requestSecret()
+    if (retry) res = await run(retry)
   }
 
   return res
