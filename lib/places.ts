@@ -24,6 +24,28 @@ export function isPlacesConfigured(): boolean {
   return !!process.env.GOOGLE_MAPS_API_KEY
 }
 
+// Accept only Google Maps https links. The value is rendered as an <a href> in
+// RestaurantCard, so a client bypassing the autocomplete UI could otherwise
+// store a `javascript:` (or arbitrary external) URL. Returns null for anything
+// that isn't an https URL on a Google host.
+const GOOGLE_MAPS_HOST_SUFFIXES = ['google.com', 'goo.gl']
+
+export function sanitizeGoogleMapsUrl(value: unknown): string | null {
+  if (typeof value !== 'string' || !value) return null
+  let url: URL
+  try {
+    url = new URL(value)
+  } catch {
+    return null
+  }
+  if (url.protocol !== 'https:') return null
+  const host = url.hostname.toLowerCase()
+  const ok = GOOGLE_MAPS_HOST_SUFFIXES.some(
+    suffix => host === suffix || host.endsWith(`.${suffix}`)
+  )
+  return ok ? value : null
+}
+
 function apiKey(): string {
   const key = process.env.GOOGLE_MAPS_API_KEY
   if (!key) throw new Error('GOOGLE_MAPS_API_KEY not configured')

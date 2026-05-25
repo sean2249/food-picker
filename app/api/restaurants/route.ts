@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase'
 import { Restaurant } from '@/types'
 import { generateRestaurantSummary } from '@/lib/ai-summary'
 import { normalizeEntityType } from '@/lib/entity-config'
+import { sanitizeGoogleMapsUrl } from '@/lib/places'
 
 export async function GET(req: NextRequest) {
   const type = normalizeEntityType(req.nextUrl.searchParams.get('type'))
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     entity_type: normalizeEntityType(body.entity_type),
     address: body.address ?? null,
     google_place_id: body.google_place_id ?? null,
-    google_maps_url: body.google_maps_url ?? null,
+    google_maps_url: sanitizeGoogleMapsUrl(body.google_maps_url),
     latitude: body.latitude ?? null,
     longitude: body.longitude ?? null,
   }

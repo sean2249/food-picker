@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import { areStringArraysEqual, generateRestaurantSummary } from '@/lib/ai-summary'
+import { sanitizeGoogleMapsUrl } from '@/lib/places'
 
 export async function GET(
   _req: NextRequest,
@@ -55,6 +56,11 @@ export async function PATCH(
 
   const updates = {
     ...sanitizedBody,
+    // Validate the Maps URL only when the client actually sends it, so other
+    // PATCHes don't overwrite a stored value with null.
+    ...('google_maps_url' in sanitizedBody
+      ? { google_maps_url: sanitizeGoogleMapsUrl(sanitizedBody.google_maps_url) }
+      : {}),
     updated_at: new Date().toISOString(),
   }
 

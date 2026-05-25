@@ -75,7 +75,7 @@ export function RecommendPanel({ entityType }: Props) {
         tags: selectedTags.length ? selectedTags : undefined,
         mrt_line: locationMode === 'mrt' && mrtLineFilter !== 'all' ? mrtLineFilter : undefined,
         mrt_station: locationMode === 'mrt' && mrtStationFilter !== 'all' ? mrtStationFilter : undefined,
-        location_mode: locationMode === 'other' ? 'other' : undefined,
+        location_mode: locationMode,
         entity_type: entityType,
         exclude_ids: excludeIds.length ? excludeIds : undefined,
       }),

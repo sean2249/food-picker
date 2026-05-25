@@ -36,6 +36,10 @@ export async function POST(req: NextRequest) {
     if (body.location_mode === 'other') {
       // 其他地區 = has a location label that isn't a known Taipei MRT station.
       filtered = filtered.filter(r => r.mrt_station != null && !isKnownStation(r.mrt_station))
+    } else if (body.location_mode === 'mrt') {
+      // 雙北捷運 = sits at a known Taipei MRT station, so 其他地區 entries don't
+      // leak in when no specific line/station is chosen.
+      filtered = filtered.filter(r => r.mrt_station != null && isKnownStation(r.mrt_station))
     }
 
     if (body.mrt_line) {
