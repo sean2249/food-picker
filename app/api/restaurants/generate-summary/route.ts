@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSummaryParts, generateRestaurantSummary } from '@/lib/ai-summary'
+import { requireAdmin } from '@/lib/admin-auth'
 
 export async function POST(req: NextRequest) {
+  const denied = requireAdmin(req)
+  if (denied) return denied
+
   const { items, review, tags, visited, entity_type } = await req.json()
 
   const parts = createSummaryParts({

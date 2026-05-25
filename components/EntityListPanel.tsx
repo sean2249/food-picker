@@ -5,6 +5,7 @@ import { RestaurantCard } from '@/components/RestaurantCard'
 import { SectionNav } from '@/components/SectionNav'
 import { Restaurant, EntityType } from '@/types'
 import { ENTITY_CONFIG } from '@/lib/entity-config'
+import { adminFetch } from '@/lib/admin-client'
 import {
   MRT_LINES,
   STATIONS_BY_LINE,
@@ -42,8 +43,8 @@ export function EntityListPanel({ entityType }: Props) {
   }
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/restaurants/${id}`, { method: 'DELETE' })
-    setRestaurants(prev => prev.filter(r => r.id !== id))
+    const res = await adminFetch(`/api/restaurants/${id}`, { method: 'DELETE' })
+    if (res.ok) setRestaurants(prev => prev.filter(r => r.id !== id))
   }
 
   useEffect(() => {
