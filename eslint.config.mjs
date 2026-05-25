@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Claude Code harness tooling scripts — not part of the Next.js app.
+    ".claude/**",
+    ".agents/**",
   ]),
 ]);
 

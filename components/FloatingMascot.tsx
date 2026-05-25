@@ -36,20 +36,25 @@ export function FloatingMascot({ pose, message, typewriter = false }: Props) {
   // (pose) changes, dismissal resets so a new beat always announces itself.
   const [dismissed, setDismissed] = useState(false)
 
-  useEffect(() => {
-    setDismissed(false)
-  }, [pose])
+  // Reset dismissal when the pose changes (adjust during render, not in an effect).
+  const [prevPose, setPrevPose] = useState(pose)
+  if (prevPose !== pose) {
+    setPrevPose(pose)
+    if (dismissed) setDismissed(false)
+  }
+
+  // The non-animated text is fully derived from the inputs, so reset `typed`
+  // during render when message/typewriter change. The effect only drives the
+  // typewriter interval (its setState runs inside the timer, not synchronously).
+  const msgKey = `${typewriter ? 1 : 0}:${message ?? ''}`
+  const [prevMsgKey, setPrevMsgKey] = useState<string | null>(null)
+  if (prevMsgKey !== msgKey) {
+    setPrevMsgKey(msgKey)
+    setTyped(message && !typewriter ? message : '')
+  }
 
   useEffect(() => {
-    if (!message) {
-      setTyped('')
-      return
-    }
-    if (!typewriter) {
-      setTyped(message)
-      return
-    }
-    setTyped('')
+    if (!message || !typewriter) return
     let i = 0
     const id = setInterval(() => {
       i++

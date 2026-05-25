@@ -163,9 +163,16 @@ export function RecommendPanel({ entityType }: Props) {
     return msgs
   }, [mrtLineFilter, selectedTags, item])
 
+  // Restart the thinking-message cycle when loading begins (adjust during
+  // render, not in an effect). The effect only drives the interval.
+  const [prevLoading, setPrevLoading] = useState(false)
+  if (prevLoading !== loading) {
+    setPrevLoading(loading)
+    if (loading) setThinkingIdx(0)
+  }
+
   useEffect(() => {
     if (!loading) return
-    setThinkingIdx(0)
     const id = setInterval(() => {
       setThinkingIdx(i => (i + 1) % thinkingMessages.length)
     }, 1400)

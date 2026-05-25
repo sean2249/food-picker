@@ -24,7 +24,12 @@ export function NavBar() {
   const panelId = useId()
   const containerRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => { setOpen(false) }, [pathname])
+  // Close the menu on route change (adjust during render, not in an effect).
+  const [prevPathname, setPrevPathname] = useState(pathname)
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname)
+    if (open) setOpen(false)
+  }
 
   useEffect(() => {
     if (!open) return
