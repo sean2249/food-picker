@@ -21,6 +21,7 @@ export function RecommendPanel({ entityType }: Props) {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [visitedFilter, setVisitedFilter] = useState<'all' | 'visited' | 'unvisited'>('all')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [locationMode, setLocationMode] = useState<'mrt' | 'other'>('mrt')
   const [mrtLineFilter, setMrtLineFilter] = useState<MrtLineId | 'all'>('all')
   const [mrtStationFilter, setMrtStationFilter] = useState<string | 'all'>('all')
   const [allTags, setAllTags] = useState<string[]>([])
@@ -32,6 +33,14 @@ export function RecommendPanel({ entityType }: Props) {
       return
     }
     if (mrtStationFilter !== 'all' && !(STATIONS_BY_LINE[next] as readonly string[]).includes(mrtStationFilter)) {
+      setMrtStationFilter('all')
+    }
+  }
+
+  const handleLocationModeChange = (next: 'mrt' | 'other') => {
+    setLocationMode(next)
+    if (next === 'other') {
+      setMrtLineFilter('all')
       setMrtStationFilter('all')
     }
   }
@@ -64,8 +73,9 @@ export function RecommendPanel({ entityType }: Props) {
         item: item || undefined,
         visited_filter: visitedFilter,
         tags: selectedTags.length ? selectedTags : undefined,
-        mrt_line: mrtLineFilter !== 'all' ? mrtLineFilter : undefined,
-        mrt_station: mrtStationFilter !== 'all' ? mrtStationFilter : undefined,
+        mrt_line: locationMode === 'mrt' && mrtLineFilter !== 'all' ? mrtLineFilter : undefined,
+        mrt_station: locationMode === 'mrt' && mrtStationFilter !== 'all' ? mrtStationFilter : undefined,
+        location_mode: locationMode,
         entity_type: entityType,
         exclude_ids: excludeIds.length ? excludeIds : undefined,
       }),
@@ -92,6 +102,7 @@ export function RecommendPanel({ entityType }: Props) {
   const filterCount =
     (visitedFilter !== 'all' ? 1 : 0) +
     selectedTags.length +
+    (locationMode === 'other' ? 1 : 0) +
     (mrtLineFilter !== 'all' ? 1 : 0) +
     (mrtStationFilter !== 'all' ? 1 : 0)
 
@@ -152,9 +163,16 @@ export function RecommendPanel({ entityType }: Props) {
     return msgs
   }, [mrtLineFilter, selectedTags, item])
 
+  // Restart the thinking-message cycle when loading begins (adjust during
+  // render, not in an effect). The effect only drives the interval.
+  const [prevLoading, setPrevLoading] = useState(false)
+  if (prevLoading !== loading) {
+    setPrevLoading(loading)
+    if (loading) setThinkingIdx(0)
+  }
+
   useEffect(() => {
     if (!loading) return
-    setThinkingIdx(0)
     const id = setInterval(() => {
       setThinkingIdx(i => (i + 1) % thinkingMessages.length)
     }, 1400)
@@ -317,6 +335,32 @@ export function RecommendPanel({ entityType }: Props) {
                 </div>
               )}
 
+              {/* Location type — 雙北捷運 / 其他地區 (mirrors the add form) */}
+              <div className="space-y-3">
+                <p className="text-sm text-foreground/70">・ 地點</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {([['mrt', '雙北捷運'], ['other', '其他地區']] as const).map(([val, label]) => {
+                    const active = locationMode === val
+                    return (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => handleLocationModeChange(val)}
+                        tabIndex={filtersOpen ? 0 : -1}
+                        className={[
+                          'px-2.5 py-1 rounded-full text-xs border transition-colors',
+                          active ? singleActive : chipInactive,
+                        ].join(' ')}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {locationMode === 'mrt' && (
+              <>
               {/* MRT line — single-select. Line buttons keep their colored dot
                   treatment so the line identity reads first. */}
               <div className="space-y-3">
@@ -396,6 +440,8 @@ export function RecommendPanel({ entityType }: Props) {
                     })}
                   </div>
                 </div>
+              )}
+              </>
               )}
             </div>
           </div>

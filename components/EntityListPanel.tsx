@@ -41,19 +41,22 @@ export function EntityListPanel({ entityType }: Props) {
     }
   }
 
-  const fetchRestaurants = async () => {
-    const res = await fetch(`/api/restaurants?type=${entityType}`)
-    const data = await res.json()
-    setRestaurants(data)
-    setLoading(false)
-  }
-
   const handleDelete = async (id: string) => {
     await fetch(`/api/restaurants/${id}`, { method: 'DELETE' })
     setRestaurants(prev => prev.filter(r => r.id !== id))
   }
 
-  useEffect(() => { fetchRestaurants() }, [entityType])
+  useEffect(() => {
+    let active = true
+    ;(async () => {
+      const res = await fetch(`/api/restaurants?type=${entityType}`)
+      const data = await res.json()
+      if (!active) return
+      setRestaurants(data)
+      setLoading(false)
+    })()
+    return () => { active = false }
+  }, [entityType])
 
   const filtered = restaurants.filter(r => {
     if (tab === '未造訪' && r.visited) return false

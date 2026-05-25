@@ -4,7 +4,8 @@
       "Bash(npm uninstall *)",
       "Read(//Users/leechiwei/.claude/**)",
       "Read(//Users/leechiwei/.claude/plugins/**)",
-      "Bash(node /Users/leechiwei/Projects/food-picker/.agents/skills/impeccable/scripts/cleanup-deprecated.mjs)"
+      "Bash(node /Users/leechiwei/Projects/food-picker/.agents/skills/impeccable/scripts/cleanup-deprecated.mjs)",
+      "mcp__5ac73137-3711-438d-b3fa-ac9a5f2a2caa__list_tables"
     ]
   }
 }
