@@ -6,7 +6,7 @@ import { isUnlocked, openAdminDialog, subscribeAuth } from '@/lib/admin-client'
 
 interface Props {
   variant?: 'icon' | 'row'
-  // Mobile menu passes its open state so the row isn't tab-focusable while the
+  // Mobile menu passes its open state so the pill isn't tab-focusable while the
   // panel is collapsed, and a callback to close the menu after opening.
   tabIndex?: number
   onAction?: () => void
@@ -23,23 +23,33 @@ export function AdminNavLock({ variant = 'icon', tabIndex, onAction }: Props) {
     onAction?.()
   }
 
+  const Icon = unlocked ? LockOpenIcon : LockIcon
+  const label = unlocked ? '編輯中' : '唯讀'
+  const aria = unlocked ? '編輯模式已開啟，點此鎖定' : '目前唯讀，點此解鎖管理'
+
+  // Filled brand pill when unlocked vs. muted outline when locked — the fill +
+  // label give an at-a-glance read/write distinction.
+  const pillClass = (size: string) =>
+    [
+      'inline-flex items-center gap-1.5 rounded-full font-medium transition-colors',
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-1',
+      size,
+      unlocked
+        ? 'bg-brand text-brand-foreground shadow-[0_2px_0_-1px_oklch(0.40_0.140_45)] hover:bg-brand/90'
+        : 'border border-border text-foreground/60 hover:border-brand/40 hover:text-foreground/80',
+    ].join(' ')
+
   if (variant === 'row') {
     return (
       <button
         type="button"
         onClick={handleClick}
         tabIndex={tabIndex}
-        className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-base
-                   text-foreground/85 transition-colors hover:bg-muted hover:text-foreground
-                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+        aria-label={aria}
+        className={pillClass('px-4 py-2.5 text-base')}
       >
-        <span className="inline-flex items-center gap-2">
-          {unlocked
-            ? <LockOpenIcon size={18} className="text-brand" />
-            : <LockIcon size={18} className="text-foreground/50" />}
-          <span>{unlocked ? '登出管理' : '登入管理'}</span>
-        </span>
-        {unlocked && <span className="text-sm text-brand/80">已解鎖</span>}
+        <Icon size={18} aria-hidden />
+        <span>{label}</span>
       </button>
     )
   }
@@ -48,17 +58,12 @@ export function AdminNavLock({ variant = 'icon', tabIndex, onAction }: Props) {
     <button
       type="button"
       onClick={handleClick}
-      aria-label={unlocked ? '管理已解鎖，點此登出' : '登入管理'}
-      title={unlocked ? '管理已解鎖' : '登入管理'}
-      className={[
-        'inline-flex h-9 w-9 items-center justify-center rounded-xl transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-1',
-        unlocked
-          ? 'text-brand hover:bg-brand/12'
-          : 'text-foreground/55 hover:bg-brand/10 hover:text-foreground',
-      ].join(' ')}
+      aria-label={aria}
+      title={aria}
+      className={pillClass('px-3 py-1.5 text-sm')}
     >
-      {unlocked ? <LockOpenIcon size={18} /> : <LockIcon size={18} />}
+      <Icon size={15} aria-hidden />
+      <span>{label}</span>
     </button>
   )
 }
