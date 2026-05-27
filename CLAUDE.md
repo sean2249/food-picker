@@ -47,22 +47,29 @@ There is no test framework. `npx tsc --noEmit` is the only automated correctness
 | `GOOGLE_MAPS_API_KEY` | **API routes only** — Google Places API (New), proxied via `/api/places/*` |
 | `ADMIN_SECRET` | **API routes only** — shared secret gating writes (see "Write protection" below) |
 
-`SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_MAPS_API_KEY`, and `ADMIN_SECRET` must never reach the client — the Places key is used only server-side in `lib/places.ts`, and the browser hits `/api/places/{autocomplete,details}` instead. Local dev reads from `.env.local`; production deploys via `.github/workflows/deploy.yml` inject the build environment from GitHub Actions secrets (`NEXT_PUBLIC_*` get inlined into the bundle by Next.js at build time, so they don't need a `[vars]` block in `wrangler.toml`). **Add `GOOGLE_MAPS_API_KEY` as a GitHub Actions secret and pass it through in `deploy.yml`**, otherwise the deployed Worker's Places routes return 503. **`ADMIN_SECRET` is wired the same way — set it in `.env.local` for dev and as a GitHub Actions secret (already passed through in `deploy.yml`); if it's missing, every guarded route fails closed with 503, so the curator can't edit either.** `.env.local.example` also lists `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_URL` but no Telegram routes currently exist in the codebase — treat those as dormant.
+`SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_MAPS_API_KEY`, and `ADMIN_SECRET` must never reach the client — the Places key is used only server-side in `lib/places.ts`, and the browser hits `/api/places/{autocomplete,details}` instead.
+
+**Where each variable lives.** Local dev reads everything from `.env.local`. **Production is deployed manually with `wrangler deploy`** (`npm run cf:deploy`, or `bash scripts/deploy.sh` for logging), and the build (`npm run cf:build`) runs on your machine — so the two kinds of variable are configured in different places:
+
+- **`NEXT_PUBLIC_*`** are inlined into the bundle by Next.js **at build time**. Because the build runs locally, they must be present in your local `.env.local` when you run `cf:build`. They are not runtime Worker vars and don't belong in `wrangler.toml`.
+- **Server-only secrets** (`SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_MAPS_API_KEY`, `ADMIN_SECRET`) are read via `process.env` **at runtime** by the open-next adapter, which sources them from the **Cloudflare Worker's own Variables and Secrets** — set them in the Cloudflare dashboard (Workers → `food-picker` → Settings → Variables and Secrets, as encrypted **Secrets**) or via `wrangler secret put`. They do **not** need to be present at build time, and they are **not** injected from GitHub Actions. If `GOOGLE_MAPS_API_KEY` is missing the Places routes return 503; if `ADMIN_SECRET` is missing every guarded route fails closed with 503, so the curator can't edit either.
+
+The GitHub Actions workflow `.github/workflows/deploy.yml` is **not** the production path (legacy / reference only) — every current deploy is a manual `wrangler deploy` and all production variables live on Cloudflare. `.env.local.example` also lists `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_URL` but no Telegram routes currently exist in the codebase — treat those as dormant.
 
 ### Write protection (`ADMIN_SECRET`)
 
 The DB is single-curator: only the creator writes, friends only read and ask for recommendations. All API routes use the service-role client, which bypasses Supabase RLS, so the gate lives in the route handlers, not the database. `requireAdmin()` (`lib/admin-auth.ts`) compares an `x-admin-secret` header against `ADMIN_SECRET` and is called at the top of every **mutating or cost-incurring** route: `POST /api/restaurants`, `PATCH`/`DELETE /api/restaurants/[id]`, `generate-tags`, `generate-summary`, and `places/{autocomplete,details}`. Reads (`GET`) and the friend-facing `/api/recommend` + `/api/recommend/feedback` stay open. On the client, `adminFetch()` (`lib/admin-client.ts`) attaches the header from `localStorage`, prompting the curator once on a 401 (passive callers like address autocomplete pass `prompt: false` so typing is never interrupted). This is a shared password, not per-user auth — it stops anonymous scripts from wiping or spamming the DB; it does not authenticate individuals.
 
-### Cloudflare deploy prerequisites
+### Cloudflare deploy (manual)
 
-The deploy workflow needs two more GitHub Actions secrets:
+Production ships via `wrangler deploy` (`npm run cf:deploy`, or `bash scripts/deploy.sh` for logging) run from your machine. Authenticate wrangler first — either `wrangler login` (browser OAuth) or by exporting these in your shell:
 
-| Secret | Notes |
+| Variable | Notes |
 |---|---|
 | `CLOUDFLARE_API_TOKEN` | Create via the dashboard preset **"Edit Cloudflare Workers"** — not a hand-rolled token with only `Workers Scripts: Edit`. The asset-upload-session endpoint requires the full preset's scopes (Workers Scripts/Routes/KV/R2, Account Settings, User Details, Memberships). |
 | `CLOUDFLARE_ACCOUNT_ID` | The account that owns the `food-picker` Worker. |
 
-If deploy fails with `entitlements.not_available [code: 10007]` on the `assets-upload-session` call, the cause is one of: token missing scopes, account hasn't accepted the current Workers TOS in the dashboard, or wrong `CLOUDFLARE_ACCOUNT_ID`. The "Cloudflare auth diagnostics" step in `deploy.yml` runs `wrangler whoami` before deploy — check its output (token permissions and account list) in the failed Actions run first.
+These authenticate the deploy only; the app's **runtime** secrets are not set here — they live on the Worker (see Environment variables above). If deploy fails with `entitlements.not_available [code: 10007]` on the `assets-upload-session` call, the cause is one of: token missing scopes, account hasn't accepted the current Workers TOS in the dashboard, or wrong `CLOUDFLARE_ACCOUNT_ID`. Run `wrangler whoami` to check token permissions and the account list first.
 
 ## Architecture — things that need >1 file to understand
 
