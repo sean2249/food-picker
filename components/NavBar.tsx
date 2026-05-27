@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useId, useRef, useState } from 'react'
+import { AdminNavLock } from '@/components/AdminNavLock'
 
 const navLinks = [
   { href: '/restaurants', label: '餐廳', accent: null, primary: false },
@@ -111,6 +112,9 @@ export function NavBar() {
               </li>
             )
           })}
+          <li className="flex items-center">
+            <AdminNavLock />
+          </li>
         </ul>
 
         {/* Hamburger — only at <sm */}
@@ -185,6 +189,20 @@ export function NavBar() {
                 </li>
               )
             })}
+            <li
+              className="mt-1 border-t border-dashed border-border/70 pt-1.5
+                         opacity-0 -translate-y-1 transition-[opacity,transform] duration-300 ease-out"
+              style={{
+                transitionDelay: open ? `${80 + navLinks.length * 50}ms` : '0ms',
+                ...(open ? { opacity: 1, transform: 'translateY(0)' } : {}),
+              }}
+            >
+              <AdminNavLock
+                variant="row"
+                tabIndex={open ? 0 : -1}
+                onAction={() => setOpen(false)}
+              />
+            </li>
           </ul>
         </div>
       </div>

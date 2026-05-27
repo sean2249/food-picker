@@ -4,6 +4,7 @@ import { Restaurant } from '@/types'
 import { generateRestaurantSummary } from '@/lib/ai-summary'
 import { normalizeEntityType } from '@/lib/entity-config'
 import { sanitizeGoogleMapsUrl } from '@/lib/places'
+import { requireAdmin } from '@/lib/admin-auth'
 
 export async function GET(req: NextRequest) {
   const type = normalizeEntityType(req.nextUrl.searchParams.get('type'))
@@ -19,6 +20,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = requireAdmin(req)
+  if (denied) return denied
+
   const body = await req.json()
   const db = createServiceClient()
 

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { ENTITY_CONFIG, normalizeEntityType } from '@/lib/entity-config'
+import { requireAdmin } from '@/lib/admin-auth'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
+  const denied = requireAdmin(req)
+  if (denied) return denied
+
   const { review, name, items, entity_type } = await req.json()
   const config = ENTITY_CONFIG[normalizeEntityType(entity_type)]
 

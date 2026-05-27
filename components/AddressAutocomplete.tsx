@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import type { PlaceDetail, PlaceSuggestion } from '@/lib/places'
+import { adminFetch } from '@/lib/admin-client'
 
 interface LinkedPlace {
   name: string
@@ -55,10 +56,11 @@ export function AddressAutocomplete({
       }
       setLoading(true)
       try {
-        const res = await fetch('/api/places/autocomplete', {
+        const res = await adminFetch('/api/places/autocomplete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ input: trimmed }),
+          prompt: false,
         })
         if (res.status === 503) {
           if (seq === reqSeq.current) {
@@ -99,10 +101,11 @@ export function AddressAutocomplete({
     setQuery('')
     setResolving(true)
     try {
-      const res = await fetch('/api/places/details', {
+      const res = await adminFetch('/api/places/details', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ place_id: s.placeId }),
+        prompt: false,
       })
       if (res.ok) {
         const detail: PlaceDetail = await res.json()

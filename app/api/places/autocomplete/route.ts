@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { autocompletePlaces, isPlacesConfigured } from '@/lib/places'
+import { requireAdmin } from '@/lib/admin-auth'
 
 export async function POST(req: NextRequest) {
+  const denied = requireAdmin(req)
+  if (denied) return denied
+
   if (!isPlacesConfigured()) {
     return NextResponse.json({ error: 'Google Maps 未設定' }, { status: 503 })
   }

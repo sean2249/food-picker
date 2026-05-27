@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import { areStringArraysEqual, generateRestaurantSummary } from '@/lib/ai-summary'
 import { sanitizeGoogleMapsUrl } from '@/lib/places'
+import { requireAdmin } from '@/lib/admin-auth'
 
 export async function GET(
   _req: NextRequest,
@@ -23,6 +24,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireAdmin(req)
+  if (denied) return denied
+
   const { id } = await params
   const body = await req.json()
   const db = createServiceClient()
@@ -115,9 +119,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireAdmin(req)
+  if (denied) return denied
+
   const { id } = await params
   const db = createServiceClient()
   const { error } = await db.from('restaurants').delete().eq('id', id)

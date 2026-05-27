@@ -11,6 +11,7 @@ import {
 } from '@/lib/mrt-stations'
 import { AddressAutocomplete } from '@/components/AddressAutocomplete'
 import type { PlaceDetail } from '@/lib/places'
+import { adminFetch } from '@/lib/admin-client'
 
 type MrtMode = 'taipei' | 'other'
 
@@ -123,7 +124,7 @@ export function RestaurantForm({ onSubmit, initialData, onCancel, entityType = '
   const handleGenerateTags = async () => {
     if (!review.trim()) return
     setGeneratingTags(true)
-    const res = await fetch('/api/restaurants/generate-tags', {
+    const res = await adminFetch('/api/restaurants/generate-tags', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ review, name, items, entity_type: entityType }),

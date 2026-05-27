@@ -4,6 +4,7 @@ import { RestaurantForm } from '@/components/RestaurantForm'
 import { SectionNav } from '@/components/SectionNav'
 import { Restaurant, EntityType } from '@/types'
 import { ENTITY_CONFIG } from '@/lib/entity-config'
+import { adminFetch } from '@/lib/admin-client'
 
 interface Props {
   entityType: EntityType
@@ -14,7 +15,7 @@ export function EntityNewPanel({ entityType }: Props) {
   const config = ENTITY_CONFIG[entityType]
 
   const handleSubmit = async (data: Partial<Restaurant>) => {
-    const res = await fetch('/api/restaurants', {
+    const res = await adminFetch('/api/restaurants', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
