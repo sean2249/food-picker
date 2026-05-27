@@ -51,8 +51,12 @@ export function AddressAutocomplete({
   // Guards against out-of-order autocomplete responses overwriting newer ones.
   const reqSeq = useRef(0)
 
-  // Re-run search when admin unlock state changes (login/logout).
-  useEffect(() => subscribeAuth(() => setAuthNonce(n => n + 1)), [])
+  // Re-run search when admin unlock state changes (login/logout). subscribeAuth
+  // returns its unsubscribe fn, which we hand back as the effect cleanup.
+  useEffect(() => {
+    const unsubscribe = subscribeAuth(() => setAuthNonce(n => n + 1))
+    return unsubscribe
+  }, [])
 
   // Debounced autocomplete on query change. All state updates live inside the
   // timer callback (not the synchronous effect body) so they don't cascade.
@@ -96,7 +100,10 @@ export function AddressAutocomplete({
         setSuggestions(data.suggestions ?? [])
         setOpen(true)
       } catch {
-        if (seq === reqSeq.current) setSearchError('failed')
+        if (seq === reqSeq.current) {
+          setSearchError('failed')
+          setSuggestions([])
+        }
       } finally {
         if (seq === reqSeq.current) setLoading(false)
       }

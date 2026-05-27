@@ -6,7 +6,7 @@
 
 兩個 UX 缺口，都讓使用者「要用猜的」：
 
-1. **autocomplete 靜默失敗** — `AddressAutocomplete` 只有 503（沒設 key）會顯示訊息；401（未解鎖）、500（Google 錯）、網路錯全部走進 `setSuggestions([])`（`AddressAutocomplete.tsx:74,78`），畫面一片空白、零提示。最常見的 401 情境（curator 沒先解鎖）完全沒有線索。
+1. **autocomplete 靜默失敗** — `AddressAutocomplete` 只有 503（沒設 key）會顯示訊息；401（未解鎖）、500（Google 錯）、網路錯全部走進 `setSuggestions([])`（debounce effect 與其 catch 分支），畫面一片空白、零提示。最常見的 401 情境（curator 沒先解鎖）完全沒有線索。
 2. **鎖頭狀態不明顯** — `AdminNavLock` 桌機版只靠 icon 換色（灰↔橘）區分鎖定/解鎖；手機版用「登入管理／登出管理」文字，狀態靠很淡的線索，且字樣不直觀。
 
 ## 目標
@@ -34,7 +34,7 @@ admin 驗證機制、`/api/places/*`、Google API 設定、`adminFetch` 既有�
   | `catch`（網路） | `failed` |
   | query 清空 | `null` |
 
-- **呈現位置**：輸入框下方既有的「保留高度」狀態區（`AddressAutocomplete.tsx:185-204`），**輸入框保持可見**（不再像現在 503 那樣整個 early-return 蓋掉輸入框）。
+- **呈現位置**：輸入框下方既有的「保留高度」狀態區（與 loading／backfill 共用的那塊），**輸入框保持可見**（不再像現在 503 那樣整個 early-return 蓋掉輸入框）。
   - `unauth`：`🔒 需先解鎖管理才能搜尋地址` ＋ `[解鎖]` 按鈕 → `openAdminDialog()`。
   - `unconfigured`：沿用現有文案「Google Maps 搜尋未啟用」。
   - `failed`：`⚠ 地址搜尋失敗，請稍後再試`。

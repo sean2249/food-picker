@@ -6,7 +6,7 @@
 
 ## D1. autocomplete 失敗用「inline 狀態訊息」而非彈 modal
 
-- **背景**：`AddressAutocomplete.tsx:74,78` 把 401/500/網路錯全吞成空陣列，使用者打字後畫面全空、不知為何（trace：本次 session 的 `/api/places/autocomplete` 500/401 排查，最終卡在「不知道要解鎖」）。
+- **背景**：`AddressAutocomplete` 的 debounce effect 把 401/500/網路錯全吞成空建議陣列，使用者打字後畫面全空、不知為何（trace：本次 session 的 `/api/places/autocomplete` 500/401 排查，最終卡在「不知道要解鎖」）。
 - **替代方案**：
   - (a) inline 狀態訊息（輸入框下方）— 不打斷打字。
   - (b) 401 時直接彈解鎖 dialog — 最不會被忽略，但打字打到一半被中斷，違反既有 `prompt:false` 設計。
