@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { LockIcon } from 'lucide-react'
 import type { PlaceDetail, PlaceSuggestion } from '@/lib/places'
-import { adminFetch } from '@/lib/admin-client'
+import { adminFetch, openAdminDialog, subscribeAuth } from '@/lib/admin-client'
 
 interface LinkedPlace {
   name: string
@@ -16,6 +17,10 @@ interface Props {
   initialQuery?: string   // backfill: pre-seed the search with the existing name
   placeholder?: string
 }
+
+// Why the search produced no dropdown. null = success / idle. Surfaced inline
+// below the input so a silent failure never leaves the user guessing.
+type SearchError = 'unauth' | 'unconfigured' | 'failed' | null
 
 const inputClass =
   'w-full rounded-2xl border border-border/80 bg-card/80 ' +
@@ -36,12 +41,22 @@ export function AddressAutocomplete({
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [resolving, setResolving] = useState(false)
-  const [notConfigured, setNotConfigured] = useState(false)
+  const [searchError, setSearchError] = useState<SearchError>(null)
+  // Bumped whenever the admin lock state flips, so the debounce effect re-runs
+  // and re-searches the current query right after the user unlocks.
+  const [authNonce, setAuthNonce] = useState(0)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   // Guards against out-of-order autocomplete responses overwriting newer ones.
   const reqSeq = useRef(0)
+
+  // Re-run search when admin unlock state changes (login/logout). subscribeAuth
+  // returns its unsubscribe fn, which we hand back as the effect cleanup.
+  useEffect(() => {
+    const unsubscribe = subscribeAuth(() => setAuthNonce(n => n + 1))
+    return unsubscribe
+  }, [])
 
   // Debounced autocomplete on query change. All state updates live inside the
   // timer callback (not the synchronous effect body) so they don't cascade.
@@ -51,6 +66,7 @@ export function AddressAutocomplete({
     const timer = setTimeout(async () => {
       if (!trimmed) {
         setSuggestions([])
+        setSearchError(null)
         setLoading(false)
         return
       }
@@ -62,26 +78,38 @@ export function AddressAutocomplete({
           body: JSON.stringify({ input: trimmed }),
           prompt: false,
         })
-        if (res.status === 503) {
-          if (seq === reqSeq.current) {
-            setNotConfigured(true)
-            setSuggestions([])
-          }
+        if (seq !== reqSeq.current) return
+        if (res.status === 401) {
+          setSearchError('unauth')
+          setSuggestions([])
           return
         }
-        const data = await res.json()
-        if (seq === reqSeq.current) {
-          setSuggestions(res.ok ? (data.suggestions ?? []) : [])
-          setOpen(true)
+        if (res.status === 503) {
+          setSearchError('unconfigured')
+          setSuggestions([])
+          return
         }
+        if (!res.ok) {
+          setSearchError('failed')
+          setSuggestions([])
+          return
+        }
+        const data = await res.json().catch(() => ({}))
+        if (seq !== reqSeq.current) return
+        setSearchError(null)
+        setSuggestions(data.suggestions ?? [])
+        setOpen(true)
       } catch {
-        if (seq === reqSeq.current) setSuggestions([])
+        if (seq === reqSeq.current) {
+          setSearchError('failed')
+          setSuggestions([])
+        }
       } finally {
         if (seq === reqSeq.current) setLoading(false)
       }
     }, trimmed ? 250 : 0)
     return () => clearTimeout(timer)
-  }, [query])
+  }, [query, authNonce])
 
   // Close dropdown when tapping outside (mobile + desktop).
   useEffect(() => {
@@ -158,14 +186,6 @@ export function AddressAutocomplete({
     )
   }
 
-  if (notConfigured) {
-    return (
-      <p className="text-xs text-foreground/55">
-        Google Maps 搜尋目前未啟用（缺少 API key）。
-      </p>
-    )
-  }
-
   return (
     <div ref={containerRef} className="relative">
       <input
@@ -188,6 +208,26 @@ export function AddressAutocomplete({
           <span className="text-xs text-foreground/55">讀取地點資訊…</span>
         ) : loading ? (
           <span className="text-xs text-foreground/55">搜尋中…</span>
+        ) : searchError === 'unauth' ? (
+          <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-foreground/70">
+            <span className="inline-flex items-center gap-1">
+              <LockIcon size={12} aria-hidden />
+              需先解鎖管理才能搜尋地址
+            </span>
+            <button
+              type="button"
+              onClick={() => openAdminDialog()}
+              className="rounded-full border border-brand/50 bg-brand/10 px-2.5 py-0.5 font-medium text-brand
+                         hover:bg-brand/20 transition-colors
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            >
+              解鎖
+            </button>
+          </span>
+        ) : searchError === 'unconfigured' ? (
+          <span className="text-xs text-foreground/55">Google Maps 搜尋未啟用（缺少 API key）。</span>
+        ) : searchError === 'failed' ? (
+          <span className="text-xs text-foreground/60">⚠ 地址搜尋失敗，請稍後再試。</span>
         ) : initialQuery && !query ? (
           <button
             type="button"
