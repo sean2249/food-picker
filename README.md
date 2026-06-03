@@ -60,25 +60,30 @@ cp .env.local.example .env.local
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key（client，唯讀） |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key（**僅 API routes**） |
 | `ANTHROPIC_API_KEY` | Anthropic API key（**僅 API routes**） |
+| `GOOGLE_MAPS_API_KEY` | Google Places API key（**僅 API routes**，proxy `/api/places/*`） |
+| `ADMIN_SECRET` | 管理寫入用的共用密鑰（**僅 API routes**；空值會讓寫入路由全部 503） |
 
-`SUPABASE_SERVICE_ROLE_KEY` 與 `ANTHROPIC_API_KEY` 絕不能暴露到 client。
+`SUPABASE_SERVICE_ROLE_KEY`、`ANTHROPIC_API_KEY`、`GOOGLE_MAPS_API_KEY`、`ADMIN_SECRET` 絕不能暴露到 client。
 
 ## 部署到 Cloudflare Workers
 
-正式部署走 GitHub Actions（`.github/workflows/deploy.yml`）—— push 到 `main` 會自動 build + deploy，所有環境變數從 repo secrets 注入到 build：`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`、`SUPABASE_SERVICE_ROLE_KEY`、`ANTHROPIC_API_KEY`，外加 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`。
+兩條路徑都跑 `wrangler deploy`：
 
-要本機部署的話：
+- **GitHub Actions**（`.github/workflows/deploy.yml`，push 到 `main` 自動觸發）。Build 時只注入 `NEXT_PUBLIC_*`（Next.js 要在 build 時 inline 進 client bundle）；server-only secrets 是 Worker runtime 才讀。Repo secrets 需設：`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`、`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`。
+- **本機手動**（讀本地 `.env.local`）：
 
-```bash
-# 一鍵 build + deploy（讀本地 .env.local）
-bash scripts/deploy.sh
+  ```bash
+  # 一鍵 build + deploy
+  bash scripts/deploy.sh
 
-# 或分開執行
-npm run cf:build
-npm run cf:deploy
-```
+  # 或分開執行
+  npm run cf:build
+  npm run cf:deploy
+  ```
 
-`NEXT_PUBLIC_*` 由 Next.js 在 build 時就 inline 進 bundle，不需要在 `wrangler.toml` 設定。server-only secrets 也是 build-time 注入，所以不必走 `wrangler secret put`。
+`SUPABASE_SERVICE_ROLE_KEY`、`ANTHROPIC_API_KEY`、`GOOGLE_MAPS_API_KEY`、`ADMIN_SECRET` 是 runtime server secrets，設在 **Cloudflare Worker 的 Variables and Secrets**（dashboard → Workers → `food-picker` → Settings，或 `wrangler secret put`），opennext adapter 會在 runtime 從 `process.env` 讀。**不要**靠 build-time 注入。`NEXT_PUBLIC_*` 由 Next.js 在 build 時 inline 進 bundle，不需要在 `wrangler.toml` 設定。
+
+更完整的環境變數與部署模型見 [`CLAUDE.md`](./CLAUDE.md)。
 
 ## License
 
