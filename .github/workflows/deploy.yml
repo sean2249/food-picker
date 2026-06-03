@@ -34,12 +34,13 @@ jobs:
       - name: Build (OpenNext for Cloudflare)
         run: npm run cf:build
         env:
+          # Only NEXT_PUBLIC_* belong here: Next.js inlines them into the client
+          # bundle at build time. Server-only secrets (Supabase service role,
+          # Anthropic, Google Maps, ADMIN_SECRET) are read at runtime from the
+          # Cloudflare Worker's own Variables and Secrets — that's the
+          # authoritative source — so they are intentionally not injected here.
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
 
       - name: Cloudflare auth diagnostics
         run: |
