@@ -43,3 +43,5 @@ next-env.d.ts
 
 .open-next/
 .wrangler/
+# Per-machine Claude Code settings (local paths)
+.claude/settings.local.json
